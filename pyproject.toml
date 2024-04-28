@@ -1,0 +1,30 @@
+[build-system]
+# Specify the build system requirements
+requires = ["setuptools>=42", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.poetry]
+name = "your_package_name"
+version = "0.1.0"
+description = "A python implementation of weighted directed graphs"
+authors = ["josek98 <josemmsscc98@gmail.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.6"
+
+[tool.poetry.dev-dependencies]
+
+[build-system]
+
+[tool.poetry.dev-dependencies]
+pytest = "^6.0"
+# Add any development dependencies needed for testing or building your package
+
+[tool.poetry.scripts]
+# If your package includes any command-line scripts, list them here
+# script_name = "module_name:function_name"
+
+[tool.poetry.extras]
+# Define any extra dependencies here
+# Example:
+# my_extra_feature = ["dependency1", "dependency2"]

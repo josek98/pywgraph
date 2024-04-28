@@ -1,5 +1,5 @@
 import numpy as np 
-from _edge import WeightedDirectedEdge
+from ._edge import WeightedDirectedEdge
 
 
 class WeightedDirectedGraph:
