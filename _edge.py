@@ -17,6 +17,9 @@ class DirectedEdge:
     @property
     def inverse(self) -> "DirectedEdge":
         return DirectedEdge(self._end, self._start)
+    
+    def __hash__(self) -> int:
+        return hash((self._start, self._end))
 
     def __eq__(self, other: object) -> bool:
         if isinstance(other, DirectedEdge):
@@ -39,6 +42,9 @@ class WeightedDirectedEdge(DirectedEdge):
     @property
     def inverse(self) -> "WeightedDirectedEdge":
         return WeightedDirectedEdge(self._end, self._start, 1 / self._weight)
+    
+    def __hash__(self) -> int:
+        return hash((self._start, self._end, self._weight))
 
     def __eq__(self, other: object) -> bool:
         if isinstance(other, WeightedDirectedEdge):
