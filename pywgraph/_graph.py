@@ -41,6 +41,33 @@ class WeightedDirectedGraph:
             raise NodeNotFound(node)
         return {edge.start for edge in self._edges if edge.end == node}
 
+    def add_reverse_edges(self, inplace: bool = False):
+        """Adds the missing inverse direction edges"""
+
+        all_inverse_edges = {edge.inverse for edge in self._edges}
+        inverse_edges = {
+            edge
+            for edge in all_inverse_edges
+            if edge.start not in self.parents(edge.end)
+        }
+        if inplace:
+            self._edges.update(inverse_edges)
+
+        return WeightedDirectedGraph(self._nodes, self._edges | inverse_edges)
+
+    @classmethod
+    def from_dict(
+        cls, dict: dict[str, dict[str, float | np.ndarray]]
+    ) -> "WeightedDirectedGraph":
+        """Creates a graph from a dictionary."""
+        nodes = set(dict.keys())
+        edges = {
+            WeightedDirectedEdge(start, end, weight)
+            for start, end_dict in dict.items()
+            for end, weight in end_dict.items()
+        }
+        return cls(nodes, edges)
+
     def __repr__(self) -> str:
         return f"WeightedDirectedGraph(nodes={self._nodes}, edges={self._edges})"
 

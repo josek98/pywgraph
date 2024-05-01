@@ -1,5 +1,7 @@
 import numpy as np
 
+np.set_printoptions(precision=2)  # This is for the repr of the edge
+
 
 class DirectedEdge:
     def __init__(self, start: str, end: str) -> None:
@@ -28,32 +30,53 @@ class DirectedEdge:
             return self._start == other.start and self._end == other.end
         return False
 
+    def __iter__(self):
+        yield self._start
+        yield self._end
+
     def __repr__(self) -> str:
         return f"{self._start} -> {self._end}"
 
 
 class WeightedDirectedEdge(DirectedEdge):
-    def __init__(self, start: str, end: str, weight: float | np.ndarray[float]) -> None:
+    def __init__(
+        self, start: str, end: str, weight: float | list[float] | np.ndarray[float]
+    ) -> None:
         super().__init__(start, end)
-        self._weight = weight
+        if isinstance(weight, (float, int)):
+            self._weight = np.array([weight])
+        else:
+            self._weight = np.array(weight)
 
     @property
-    def weight(self) -> float | np.ndarray[float]:
+    def weight(self) -> np.ndarray:
         return self._weight
 
     @property
     def inverse(self) -> "WeightedDirectedEdge":
         return WeightedDirectedEdge(self._end, self._start, 1 / self._weight)
 
+    def __iter__(self):
+        yield self._start
+        yield self._end
+        yield self._weight
+
     def __hash__(self) -> int:
-        return hash((self._start, self._end, self._weight))
+        return hash((self._start, self._end))
 
     def __eq__(self, other: object) -> bool:
         if isinstance(other, WeightedDirectedEdge):
             return super().__eq__(other) and np.array_equal(self._weight, other.weight)
         return False
 
+    def __len__(self) -> int:
+        if isinstance(self.weight, np.ndarray):
+            return len(self.weight)
+        return 1
+
     def __repr__(self) -> str:
+        if len(self) == 1:
+            return super().__repr__() + f": {self._weight[0]:.2f}"
         return super().__repr__() + f": {self._weight}"
 
 
