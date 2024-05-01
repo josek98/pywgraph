@@ -3,6 +3,8 @@ import numpy as np
 
 class DirectedEdge:
     def __init__(self, start: str, end: str) -> None:
+        if start == end:
+            raise ValueError("Start and end vertices must be different")
         self._start = start
         self._end = end
 
@@ -13,11 +15,11 @@ class DirectedEdge:
     @property
     def end(self) -> str:
         return self._end
-    
+
     @property
     def inverse(self) -> "DirectedEdge":
         return DirectedEdge(self._end, self._start)
-    
+
     def __hash__(self) -> int:
         return hash((self._start, self._end))
 
@@ -42,7 +44,7 @@ class WeightedDirectedEdge(DirectedEdge):
     @property
     def inverse(self) -> "WeightedDirectedEdge":
         return WeightedDirectedEdge(self._end, self._start, 1 / self._weight)
-    
+
     def __hash__(self) -> int:
         return hash((self._start, self._end, self._weight))
 
