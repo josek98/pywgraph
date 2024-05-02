@@ -1,9 +1,5 @@
-import numpy as np
-
-np.set_printoptions(precision=2)  # This is for the repr of the edge
-
-
 class DirectedEdge:
+
     def __init__(self, start: str, end: str) -> None:
         if start == end:
             raise ValueError("Start and end vertices must be different")
@@ -39,17 +35,15 @@ class DirectedEdge:
 
 
 class WeightedDirectedEdge(DirectedEdge):
-    def __init__(
-        self, start: str, end: str, weight: float | list[float] | np.ndarray[float]
-    ) -> None:
+
+    repr_precision: int = 2
+
+    def __init__(self, start: str, end: str, weight: float) -> None:
         super().__init__(start, end)
-        if isinstance(weight, (float, int)):
-            self._weight = np.array([weight])
-        else:
-            self._weight = np.array(weight)
+        self._weight = weight
 
     @property
-    def weight(self) -> np.ndarray:
+    def weight(self) -> float:
         return self._weight
 
     @property
@@ -62,25 +56,20 @@ class WeightedDirectedEdge(DirectedEdge):
         yield self._weight
 
     def __hash__(self) -> int:
-        return hash((self._start, self._end))
+        return hash((self._start, self._end, self._weight))
 
     def __eq__(self, other: object) -> bool:
         if isinstance(other, WeightedDirectedEdge):
-            return super().__eq__(other) and np.array_equal(self._weight, other.weight)
+            return super().__eq__(other) and self._weight == other.weight
         return False
 
-    def __len__(self) -> int:
-        if isinstance(self.weight, np.ndarray):
-            return len(self.weight)
-        return 1
-
     def __repr__(self) -> str:
-        if len(self) == 1:
-            return super().__repr__() + f": {self._weight[0]:.2f}"
-        return super().__repr__() + f": {self._weight}"
+        format_string = "{{:.{}f}}".format(self.repr_precision)
+        formatted_weight = format_string.format(self.weight)
+        return super().__repr__() + f": {formatted_weight}"
 
 
 if __name__ == "__main__":
-    edge = WeightedDirectedEdge("A", "B", np.array([1, 2, 3]))
+    edge = WeightedDirectedEdge("A", "B", 6)
     print(edge)
     print(edge.inverse)

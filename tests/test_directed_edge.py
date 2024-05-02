@@ -1,5 +1,4 @@
-import numpy as np
-from pywgraph._edge import DirectedEdge, WeightedDirectedEdge
+from pywgraph._edge import DirectedEdge
 
 
 def edge() -> DirectedEdge:

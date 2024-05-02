@@ -1,4 +1,3 @@
-import numpy as np
 from ._edge import WeightedDirectedEdge  # type: ignore
 from ._exceptions import NodeNotFound  # type: ignore
 
@@ -57,7 +56,7 @@ class WeightedDirectedGraph:
 
     @classmethod
     def from_dict(
-        cls, dict: dict[str, dict[str, float | np.ndarray]]
+        cls, dict: dict[str, dict[str, float]]
     ) -> "WeightedDirectedGraph":
         """Creates a graph from a dictionary."""
         nodes = set(dict.keys())
