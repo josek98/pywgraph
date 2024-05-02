@@ -55,9 +55,7 @@ class WeightedDirectedGraph:
         return WeightedDirectedGraph(self._nodes, self._edges | inverse_edges)
 
     @classmethod
-    def from_dict(
-        cls, dict: dict[str, dict[str, float]]
-    ) -> "WeightedDirectedGraph":
+    def from_dict(cls, dict: dict[str, dict[str, float]]) -> "WeightedDirectedGraph":
         """Creates a graph from a dictionary."""
         nodes = set(dict.keys())
         edges = {
@@ -69,6 +67,11 @@ class WeightedDirectedGraph:
 
     def __repr__(self) -> str:
         return f"WeightedDirectedGraph(nodes={self._nodes}, edges={self._edges})"
+    
+    def __eq__(self, other: object) -> bool: 
+        if isinstance(other, WeightedDirectedGraph):
+            return self._nodes == other._nodes and self._edges == other._edges
+        return False
 
 
 if __name__ == "__main__":

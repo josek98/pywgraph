@@ -1,4 +1,4 @@
-from pywgraph._edge import DirectedEdge
+from pywgraph import DirectedEdge
 
 
 def edge() -> DirectedEdge:

@@ -1,4 +1,4 @@
-from pywgraph._edge import WeightedDirectedEdge
+from pywgraph import WeightedDirectedEdge
 
 def wedge() -> WeightedDirectedEdge:
     """Return a new WeightedDirectedEdge instance."""
