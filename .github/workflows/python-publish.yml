@@ -44,10 +44,10 @@ jobs:
 
     environment:
       name: testpypi
-      url: https://test.pypi.org/p/<package-name>
+      url: https://test.pypi.org/p/pywgraph
 
     permissions:
-      id-token: pypi-AgENdGVzdC5weXBpLm9yZwIkMWZkNWQ1NjItOGEyYi00M2NlLTgyMzYtNGVkZTkwNjYxNWY0AAIqWzMsImU1NDBhOWFiLWU4ZDEtNDFkOC05YWIzLWIyYmUyMzI0MzVhNiJdAAAGICW9bObLPkGB1rn7do57W7KvWEGZhNHDEn63s9kM6d0Y
+      id-token: secrets.PYPI_TOKEN
 
     steps:
     - name: Download all the dists
