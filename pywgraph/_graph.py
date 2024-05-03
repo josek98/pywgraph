@@ -51,6 +51,7 @@ class WeightedDirectedGraph:
         }
         if inplace:
             self._edges.update(inverse_edges)
+            return
 
         return WeightedDirectedGraph(self._nodes, self._edges | inverse_edges)
 
