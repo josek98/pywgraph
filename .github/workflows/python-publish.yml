@@ -47,7 +47,7 @@ jobs:
       url: https://test.pypi.org/p/pywgraph
 
     permissions:
-      id-token: secrets.PYPI_TOKEN
+      id-token: ${{ secrets.PYPI_API_TOKEN }}
 
     steps:
     - name: Download all the dists
