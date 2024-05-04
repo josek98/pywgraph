@@ -1,13 +1,32 @@
 from math import prod
+from ._groups import Group
 from ._edge import WeightedDirectedEdge  # type: ignore
 from ._exceptions import NodeNotFound  # type: ignore
 from ._utils import _find_path
 
+_default_group = Group(
+    "Real numbers with multiplication", 1.0, lambda x, y: x * y, lambda x, y: x / y
+)
+
+
+def _check_nodes_in_edges(
+    nodes: set[str],
+    edges: set[WeightedDirectedEdge],
+) -> bool:
+    edge_nodes = set().union(*[{edge.start, edge.end} for edge in edges])
+    return edge_nodes <= nodes
+
 
 class WeightedDirectedGraph:
-    def __init__(self, nodes: set[str], edges: set[WeightedDirectedEdge]) -> None:
+    def __init__(
+        self,
+        nodes: set[str],
+        edges: set[WeightedDirectedEdge],
+        group: Group = _default_group,
+    ) -> None:
         self._nodes = nodes
         self._edges = edges
+        self._group = group
 
     @property
     def nodes(self) -> set[str]:
@@ -17,18 +36,13 @@ class WeightedDirectedGraph:
     def edges(self) -> set[WeightedDirectedEdge]:
         return self._edges
 
+    @property
+    def group(self) -> Group:
+        return self._group
+
     def check_definition(self) -> bool:
         """Checks if the graph is defined correctly."""
-        bad_starters = {
-            edge.start for edge in self._edges if edge.start not in self._nodes
-        }
-        bad_enders = {edge.end for edge in self._edges if edge.end not in self._nodes}
-        if len(bad_starters | bad_enders) != 0:
-            print(
-                f"Following nodes where not found in the graph nodes: {bad_starters | bad_enders}"
-            )
-            return False
-        return True
+        return _check_nodes_in_edges(self.nodes, self.edges)
 
     def children(self, node: str) -> set[str]:
         """Returns the children of a node."""
