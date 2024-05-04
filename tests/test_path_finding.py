@@ -97,6 +97,10 @@ class TestPathFinding:
         path = ["A", "C", "D", "E"]
         assert graph().path_weight(path) == pytest.approx(2.5 * 1.3 * 3.4)
 
+    def test_path_large_path(self): 
+        path = ["A", "B", "C", "D", "E", "C", "A"]
+        assert graph().path_weight(path) == pytest.approx(1.0)
+
     def test_path_weight_self_node(self):
         path = ["Z"]
         assert graph().path_weight(path) == 1.0
@@ -138,3 +142,8 @@ class TestPathFinding:
     def test_both_nodes_not_in_graph_weight_between(self):
         with pytest.raises(NodeNotFound):
             graph().weight_between("F", "G")
+
+    def test_invalid_path(self): 
+        path = ["A", "E"]
+        with pytest.raises(ValueError):
+            graph().path_weight(path)

@@ -76,3 +76,55 @@ graph_w_inverse_edges = graph.add_reverse_edges()
 # Updating the graph 
 graph.add_reverse_edges(inplace=True)
 ```
+
+### Path finding
+
+There is a method `find_path` that finds one of the shortest path between two nodes. This method returns a list of edges that represents the path. The method has two parameters: `start` and `end`. Both must be nodes of the graph. If not, an error is raised. If there is not path between the given nodes the empty list will be return. 
+
+```python
+dictionary = {
+    "A": {"B": 1.0, "C": 2.5},
+    "B": {"C": 2.5},
+    "C": {"A": 1 / 2.5, "D": 1.3},
+    "D": {"E": 3.4},
+    "E": {"C": 1 / (1.3 * 3.4), "A": 13.0},
+    "Z": {},
+}
+graph = WeightedDirectedGraph.from_dict(dictionary)
+
+graph.find_path("A", "B")
+# ["A", "B]
+
+graph.find_path("A", "Z")
+# []
+
+graph.find_path("A", "E")
+# ["A", "C", "D", "E"]
+
+graph.find_path("A", "A")
+# ["A"]
+```
+
+There are also methods to get the weight of following a path. This methods are `path_weight` and `weight_between`. The first one receives a path (a list of consecutive nodes) and returns the weight of the path (the product of the weights). If the given path does not exists an exception will be raised. If the empty path is given the return weight will be `0`. The second method receives the start and end nodes and returns the weight of one of the shortest paths between them. If there is not path between the given nodes the return weight will be `0`. The weight between a node an itself will be `1`. 
+
+```python
+graph.path_weight([])
+# 0.0
+
+graph.path_weight(["A", "B"])
+# 1.0
+
+graph.path_weight(["A", "B", "C"])
+# 2.5
+
+grap.weight_between("A", "C")
+# 2.5
+
+grap.weight_between("A", "Z")
+# 0.0
+
+grap.weight_between("A", "A")
+# 1.0
+```
+
+**WARNING**: Currently, if a path that contains a cycle is given the method `path_weight` will raise an error. In future this behaviour will be change to allow cycles. 

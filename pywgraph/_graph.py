@@ -66,18 +66,20 @@ class WeightedDirectedGraph:
 
     def path_weight(self, path: list[str]) -> float:
         """Returns the weight of following the given path in the graph"""
-        if not path: 
+        if not path:
             return 0.0
-        
+
         uknown_nodes = set(path) - self.nodes
-        if uknown_nodes: 
+        if uknown_nodes:
             raise NodeNotFound(uknown_nodes)
         path_pairs = list(zip(path, path[1::]))
         path_edges_weights = [
             edge.weight for edge in self.edges if (edge.start, edge.end) in path_pairs
         ]
+        if len(path_pairs) != len(path_edges_weights):
+            raise ValueError(f"The path {path} is not a valid path in the graph")
         return prod(path_edges_weights)
-    
+
     def weight_between(self, start: str, end: str) -> float:
         """Returns the weight of the shortest path between two nodes."""
         path = self.find_path(start, end)
