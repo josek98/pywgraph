@@ -1,4 +1,5 @@
-from pywgraph import WeightedDirectedGraph
+import pytest
+from pywgraph import WeightedDirectedGraph, NodeNotFound
 
 
 def graph() -> WeightedDirectedGraph:
@@ -77,3 +78,11 @@ class TestPathFinding:
     def test_self_node(self):
         for node in graph().nodes:
             assert graph().find_path(node, node) == [node]
+
+    def test_end_node_not_in_graph(self):
+        with pytest.raises(NodeNotFound):
+            graph().find_path("A", "F")
+
+    def test_start_node_not_in_graph(self):
+        with pytest.raises(NodeNotFound):
+            graph().find_path("F", "E")
