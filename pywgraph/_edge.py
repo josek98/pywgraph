@@ -1,3 +1,12 @@
+from typing import TypeVar
+from ._groups import Group
+
+T = TypeVar("T")
+_default_group = Group(
+    "Real numbers with multiplication", 1.0, lambda x, y: x * y, lambda x, y: x / y
+)
+
+
 class DirectedEdge:
 
     def __init__(self, start: str, end: str) -> None:
@@ -38,17 +47,25 @@ class WeightedDirectedEdge(DirectedEdge):
 
     repr_precision: int = 2
 
-    def __init__(self, start: str, end: str, weight: float) -> None:
+    def __init__(
+        self, start: str, end: str, weight: T, group: Group = _default_group
+    ) -> None:
         super().__init__(start, end)
         self._weight = weight
+        self._group = group
 
     @property
-    def weight(self) -> float:
+    def weight(self) -> T:  # type: ignore
         return self._weight
 
     @property
+    def group(self) -> Group:
+        return self._group
+
+    @property
     def inverse(self) -> "WeightedDirectedEdge":
-        return WeightedDirectedEdge(self._end, self._start, 1 / self._weight)
+        inverse_weight = self.group.inverse(self._weight)
+        return WeightedDirectedEdge(self._end, self._start, inverse_weight, self.group)
 
     def __iter__(self):
         yield self._start
