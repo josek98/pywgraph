@@ -1,5 +1,6 @@
 from ._edge import WeightedDirectedEdge  # type: ignore
 from ._exceptions import NodeNotFound  # type: ignore
+from ._utils import _find_path 
 
 
 class WeightedDirectedGraph:
@@ -54,6 +55,12 @@ class WeightedDirectedGraph:
             return
 
         return WeightedDirectedGraph(self._nodes, self._edges | inverse_edges)
+    
+    def find_path(self, start: str, end: str) -> list[str]:
+        """Finds a path between two nodes."""
+        if start not in self._nodes or end not in self._nodes:
+            raise NodeNotFound(start)
+        return _find_path(self, start, end)
 
     @classmethod
     def from_dict(cls, dict: dict[str, dict[str, float]]) -> "WeightedDirectedGraph":
