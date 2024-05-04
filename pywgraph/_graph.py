@@ -1,4 +1,4 @@
-from math import prod
+from functools import reduce # type: ignore
 from ._groups import Group
 from ._edge import WeightedDirectedEdge  # type: ignore
 from ._exceptions import NodeNotFound  # type: ignore
@@ -40,26 +40,26 @@ class WeightedDirectedGraph:
     def group(self) -> Group:
         return self._group
 
-    #Working with group
+    # Working with group
     def check_definition(self) -> bool:
         """Checks if the graph is defined correctly."""
         return _check_nodes_in_edges(self.nodes, self.edges)
 
-    #Working with group
+    # Working with group
     def children(self, node: str) -> set[str]:
         """Returns the children of a node."""
         if node not in self._nodes:
             raise NodeNotFound(node)
         return {edge.end for edge in self._edges if edge.start == node}
 
-    #Working with group
+    # Working with group
     def parents(self, node: str) -> set[str]:
         """Returns the parents of a node."""
         if node not in self._nodes:
             raise NodeNotFound(node)
         return {edge.start for edge in self._edges if edge.end == node}
 
-    #Working with group
+    # Working with group
     def add_reverse_edges(self, inplace: bool = False):
         """Adds the missing inverse direction edges"""
 
@@ -75,7 +75,7 @@ class WeightedDirectedGraph:
 
         return WeightedDirectedGraph(self._nodes, self._edges | inverse_edges)
 
-    #Working with group
+    # Working with group
     def find_path(self, start: str, end: str) -> list[str]:
         """Finds a path between two nodes."""
         uknown_nodes = {start, end} - self.nodes
@@ -83,21 +83,25 @@ class WeightedDirectedGraph:
             raise NodeNotFound(uknown_nodes)
         return _find_path(self, start, end)
 
-    def path_weight(self, path: list[str]) -> float:
+    def path_weight(self, path: list[str]) -> "Group.element":
         """Returns the weight of following the given path in the graph"""
         if not path:
-            return 0.0
+            return None
 
         uknown_nodes = set(path) - self.nodes
         if uknown_nodes:
             raise NodeNotFound(uknown_nodes)
-        path_pairs = list(zip(path, path[1::]))
+        path_pairs = list(zip(path, path[1:]))
         path_edges_weights = [
-            edge.weight for edge in self.edges if (edge.start, edge.end) in path_pairs
+            edge._weight for edge in self.edges if (edge.start, edge.end) in path_pairs
         ]
         if len(path_pairs) != len(path_edges_weights):
             raise ValueError(f"The path {path} is not a valid path in the graph")
-        return prod(path_edges_weights)
+
+        result_weight = reduce(
+            self.group.operation, path_edges_weights, self.group.neutral_element
+        )
+        return result_weight
 
     def weight_between(self, start: str, end: str) -> float:
         """Returns the weight of the shortest path between two nodes."""
@@ -116,7 +120,7 @@ class WeightedDirectedGraph:
         }
         return cls(nodes, edges)
 
-    #Working with group
+    # Working with group
     def __repr__(self) -> str:
         nodes_str = f"Nodes: {self.nodes}\n"
         edges_str = f"Edges:\n"
@@ -124,7 +128,7 @@ class WeightedDirectedGraph:
             edges_str += f"{edge}\n"
         return nodes_str + edges_str
 
-    #Working with group
+    # Working with group
     def __eq__(self, other: object) -> bool:
         if isinstance(other, WeightedDirectedGraph):
             return self._nodes == other._nodes and self._edges == other._edges
