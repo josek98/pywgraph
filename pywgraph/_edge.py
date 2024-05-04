@@ -75,7 +75,10 @@ class WeightedDirectedEdge(DirectedEdge):
 
     def __eq__(self, other: object) -> bool:
         if isinstance(other, WeightedDirectedEdge):
-            return super().__eq__(other) and self._weight == other.weight
+            weight_equality = self.group._hash_function(
+                self._weight
+            ) == self.group._hash_function(other._weight)
+            return super().__eq__(other) and weight_equality
         return False
 
     def __repr__(self) -> str:
@@ -85,7 +88,7 @@ class WeightedDirectedEdge(DirectedEdge):
         following_lines = lines[1:]
         if not following_lines:
             return f"{super_repr}: {first_line}"
-        
+
         indented_following_lines = "\n".join(
             " " * len(super_repr + ": ") + line for line in following_lines
         )
