@@ -1,5 +1,7 @@
+from math import prod
 from ._edge import WeightedDirectedEdge  # type: ignore
 from ._exceptions import NodeNotFound  # type: ignore
+from ._utils import _find_path
 
 
 class WeightedDirectedGraph:
@@ -51,8 +53,37 @@ class WeightedDirectedGraph:
         }
         if inplace:
             self._edges.update(inverse_edges)
+            return
 
         return WeightedDirectedGraph(self._nodes, self._edges | inverse_edges)
+
+    def find_path(self, start: str, end: str) -> list[str]:
+        """Finds a path between two nodes."""
+        uknown_nodes = {start, end} - self.nodes
+        if uknown_nodes:
+            raise NodeNotFound(uknown_nodes)
+        return _find_path(self, start, end)
+
+    def path_weight(self, path: list[str]) -> float:
+        """Returns the weight of following the given path in the graph"""
+        if not path:
+            return 0.0
+
+        uknown_nodes = set(path) - self.nodes
+        if uknown_nodes:
+            raise NodeNotFound(uknown_nodes)
+        path_pairs = list(zip(path, path[1::]))
+        path_edges_weights = [
+            edge.weight for edge in self.edges if (edge.start, edge.end) in path_pairs
+        ]
+        if len(path_pairs) != len(path_edges_weights):
+            raise ValueError(f"The path {path} is not a valid path in the graph")
+        return prod(path_edges_weights)
+
+    def weight_between(self, start: str, end: str) -> float:
+        """Returns the weight of the shortest path between two nodes."""
+        path = self.find_path(start, end)
+        return self.path_weight(path)
 
     @classmethod
     def from_dict(cls, dict: dict[str, dict[str, float]]) -> "WeightedDirectedGraph":
@@ -67,8 +98,8 @@ class WeightedDirectedGraph:
 
     def __repr__(self) -> str:
         return f"WeightedDirectedGraph(nodes={self._nodes}, edges={self._edges})"
-    
-    def __eq__(self, other: object) -> bool: 
+
+    def __eq__(self, other: object) -> bool:
         if isinstance(other, WeightedDirectedGraph):
             return self._nodes == other._nodes and self._edges == other._edges
         return False

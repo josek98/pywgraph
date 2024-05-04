@@ -14,7 +14,7 @@ def graph() -> WeightedDirectedGraph:
 _dict_graph: dict[str, dict[str, float]] = {
     "A": {"B": 7, "C": 9},
     "B": {"C": 10},
-    "C": {}
+    "C": {},
 }
 
 
@@ -69,7 +69,23 @@ class TestWeightedDirectedGraph:
                 WeightedDirectedEdge("C", "B", 1 / 10),
             },
         )
-        assert graph().add_reverse_edges(inplace=True) == filled_graph
+        graph_copy = graph()
+        graph_copy.add_reverse_edges(inplace=True)
+        assert graph_copy == filled_graph
+
+    def test_fill_reverse_edges(self):
+        filled_graph = WeightedDirectedGraph(
+            {"A", "B", "C"},
+            {
+                WeightedDirectedEdge("A", "B", 7),
+                WeightedDirectedEdge("B", "A", 1 / 7),
+                WeightedDirectedEdge("A", "C", 9),
+                WeightedDirectedEdge("C", "A", 1 / 9),
+                WeightedDirectedEdge("B", "C", 10),
+                WeightedDirectedEdge("C", "B", 1 / 10),
+            },
+        )
+        assert graph().add_reverse_edges() == filled_graph
 
     def test_from_dict_method(self):
         graph_from_dict = WeightedDirectedGraph.from_dict(_dict_graph)
