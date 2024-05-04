@@ -45,8 +45,6 @@ class DirectedEdge:
 
 class WeightedDirectedEdge(DirectedEdge):
 
-    repr_precision: int = 2
-
     def __init__(
         self, start: str, end: str, weight: T, group: Group = _default_group
     ) -> None:
@@ -73,7 +71,7 @@ class WeightedDirectedEdge(DirectedEdge):
         yield self._weight
 
     def __hash__(self) -> int:
-        return hash((self._start, self._end, self._weight))
+        return hash((self._start, self._end)) ^ self.group._hash_function(self._weight)
 
     def __eq__(self, other: object) -> bool:
         if isinstance(other, WeightedDirectedEdge):
@@ -81,9 +79,7 @@ class WeightedDirectedEdge(DirectedEdge):
         return False
 
     def __repr__(self) -> str:
-        format_string = "{{:.{}f}}".format(self.repr_precision)
-        formatted_weight = format_string.format(self.weight)
-        return super().__repr__() + f": {formatted_weight}"
+        return super().__repr__() + f": {self.weight}"
 
 
 if __name__ == "__main__":

@@ -111,7 +111,11 @@ class WeightedDirectedGraph:
         return cls(nodes, edges)
 
     def __repr__(self) -> str:
-        return f"WeightedDirectedGraph(nodes={self._nodes}, edges={self._edges})"
+        nodes_str = f"Nodes: {self.nodes}\n"
+        edges_str = f"Edges:\n"
+        for edge in self.edges:
+            edges_str += f"{edge}\n"
+        return nodes_str + edges_str
 
     def __eq__(self, other: object) -> bool:
         if isinstance(other, WeightedDirectedGraph):
