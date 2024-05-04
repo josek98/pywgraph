@@ -3,19 +3,21 @@ from pywgraph import WeightedDirectedGraph, NodeNotFound
 
 
 def graph() -> WeightedDirectedGraph:
-    dictionary = {
+    dictionary: dict[str, dict[str, float]] = {
         "A": {"B": 1.0, "C": 2.5},
-        "B": {"C": 3.0},
-        "C": {"A": 2.0, "D": 1.3},
+        "B": {"C": 2.5},
+        "C": {"A": 1 / 2.5, "D": 1.3},
         "D": {"E": 3.4},
-        "E": {"C": 4.0, "A": 13.0},
+        "E": {"C": 1 / (1.3 * 3.4), "A": 13.0},
+        "Z": {},
     }
     return WeightedDirectedGraph.from_dict(dictionary)
 
 
 class TestPathFinding:
 
-    def test_ab(self): 
+    # region PathFindingTest
+    def test_ab(self):
         assert graph().find_path("A", "B") == ["A", "B"]
 
     def test_ac(self):
@@ -75,14 +77,64 @@ class TestPathFinding:
     def test_ed(self):
         assert graph().find_path("E", "D") == ["E", "C", "D"]
 
+    def test_az(self):
+        assert graph().find_path("A", "Z") == []
+
     def test_self_node(self):
         for node in graph().nodes:
             assert graph().find_path(node, node) == [node]
 
-    def test_end_node_not_in_graph(self):
+    # region Path weights tests
+    def test_path_weight_ab(self):
+        path = ["A", "B"]
+        assert graph().path_weight(path) == 1.0
+
+    def test_path_weight_empty(self):
+        path = []
+        assert graph().path_weight(path) == 0.0
+
+    def test_path_weight_ae(self):
+        path = ["A", "C", "D", "E"]
+        assert graph().path_weight(path) == pytest.approx(2.5 * 1.3 * 3.4)
+
+    def test_path_weight_self_node(self):
+        path = ["Z"]
+        assert graph().path_weight(path) == 1.0
+
+    def test_weight_between_ab(self):
+        assert graph().weight_between("A", "B") == 1.0
+
+    def test_weight_between_az(self):
+        assert graph().weight_between("A", "Z") == 0.0
+
+    def test_weight_between_ae(self):
+        assert graph().weight_between("A", "E") == pytest.approx(2.5 * 1.3 * 3.4)
+
+    def test_weight_between_self_nodes(self):
+        for node in graph().nodes:
+            assert graph().weight_between(node, node) == 1.0
+
+    # region ExceptionTests
+    def test_end_node_not_in_graph_find_path(self):
         with pytest.raises(NodeNotFound):
             graph().find_path("A", "F")
 
-    def test_start_node_not_in_graph(self):
+    def test_start_node_not_in_graph_find_path(self):
         with pytest.raises(NodeNotFound):
             graph().find_path("F", "E")
+
+    def test_both_nodes_not_in_graph_find_path(self):
+        with pytest.raises(NodeNotFound):
+            graph().find_path("F", "G")
+
+    def test_end_node_not_in_graph_weight_between(self):
+        with pytest.raises(NodeNotFound):
+            graph().weight_between("A", "F")
+
+    def test_start_node_not_in_graph_weight_between(self):
+        with pytest.raises(NodeNotFound):
+            graph().weight_between("F", "E")
+
+    def test_both_nodes_not_in_graph_weight_between(self):
+        with pytest.raises(NodeNotFound):
+            graph().weight_between("F", "G")
