@@ -79,7 +79,17 @@ class WeightedDirectedEdge(DirectedEdge):
         return False
 
     def __repr__(self) -> str:
-        return super().__repr__() + f": {self.weight}"
+        super_repr = super().__repr__()
+        lines = str(self.weight).split("\n")
+        first_line = lines[0]
+        following_lines = lines[1:]
+        if not following_lines:
+            return f"{super_repr}: {first_line}"
+        
+        indented_following_lines = "\n".join(
+            " " * len(super_repr + ": ") + line for line in following_lines
+        )
+        return f"{super_repr}: {first_line}\n{indented_following_lines}"
 
 
 if __name__ == "__main__":

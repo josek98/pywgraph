@@ -1,4 +1,4 @@
-from functools import reduce # type: ignore
+from functools import reduce  # type: ignore
 from ._groups import Group
 from ._edge import WeightedDirectedEdge  # type: ignore
 from ._exceptions import NodeNotFound  # type: ignore
@@ -83,10 +83,16 @@ class WeightedDirectedGraph:
             raise NodeNotFound(uknown_nodes)
         return _find_path(self, start, end)
 
-    def path_weight(self, path: list[str]) -> "Group.element":
+    # Working with group
+    def path_weight(
+        self, path: list[str], default_value: "Group.element" = None
+    ) -> "Group.element":
         """Returns the weight of following the given path in the graph"""
         if not path:
-            return None
+            return default_value
+
+        if len(path) == 1:
+            return self.group.neutral_element
 
         uknown_nodes = set(path) - self.nodes
         if uknown_nodes:
@@ -103,22 +109,26 @@ class WeightedDirectedGraph:
         )
         return result_weight
 
-    def weight_between(self, start: str, end: str) -> float:
+    def weight_between(
+        self, start: str, end: str, default: "Group.element" = None
+    ) -> "Group.element":
         """Returns the weight of the shortest path between two nodes."""
         path = self.find_path(start, end)
-        return self.path_weight(path)
+        return self.path_weight(path, default)
 
-    # This will need to add the underlying group of the weights
+    # Working with group
     @classmethod
-    def from_dict(cls, dict: dict[str, dict[str, float]]) -> "WeightedDirectedGraph":
+    def from_dict(
+        cls, dict: dict[str, dict[str, "Group.element"]], group: Group = _default_group
+    ) -> "WeightedDirectedGraph":
         """Creates a graph from a dictionary."""
         nodes = set(dict.keys())
         edges = {
-            WeightedDirectedEdge(start, end, weight)
+            WeightedDirectedEdge(start, end, weight, group)
             for start, end_dict in dict.items()
             for end, weight in end_dict.items()
         }
-        return cls(nodes, edges)
+        return cls(nodes, edges, group)
 
     # Working with group
     def __repr__(self) -> str:
