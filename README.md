@@ -201,5 +201,51 @@ edge.inverse
 
 Is important to notice that there is no checking of wether the provide weight is a valid element of the given group. In the future there will be an option to implement an element checker in the group definition. 
 
-#### Weighted graphs
+#### General weighted graphs
 
+Now for constructing a weighted directed graph whose weights are elements of a specific group you just need to define the group and create the graph adding the group as parameter. The edges of the graph need to include the group as well, as seen before. A better way to construct the graph is to use the method `WeightedDirectedGraph.from_dict`. Now this works exactly the same but adding the group as a new parameter. 
+
+With this implementation any method that concerns weights uses the group operation to handle it. For example, the weight of a given path that the `WeightedDirectedGraph.path_weight` yields is obtain with the consecutive application of the group operation. The same happens with the `WeightedDirectedGraph.weight_between` method. 
+
+```python
+from pywgraph import WeightedDirectedGraph, Group
+import numpy as np 
+group = Group(
+    "R^2 under addition",
+    lambda x, y: x + y,
+    lambda x, y: x - y,
+    np.zeros(2),
+    hash_function=lambda x: hash(tuple(x))
+)
+
+dictionary = {
+    "A": {"B": np.array([1, 2.5]), "C": np.array([-1, 3.4])},
+    "B": {"C": np.array([2.5, -1])},
+    "C": {"A": np.array([1 / 2.5, 1 / 3.4]), "D": np.array([1.3, 3.4])},
+    "D": {"E": np.array([3.4, 1.3])},
+    "E": {},
+}
+
+graph = WeightedDirectedGraph.from_dict(dictionary, group)
+# Creates the graph
+
+graph.path_weight(["A", "C"])
+# np.array([-1, 3.4])
+
+graph.path_weight(["A", "B", "C"])
+# np.array([1, 2.5]) + np.array([2.5, -1]) = np.array([3.5, 1.5])
+
+graph.weight_between("A", "C")
+# np.array([-1, 3.4])
+
+graph.weight_between("A", "Z")
+# np.array([0, 0])
+
+graph.weight_between("A", "Z")
+# None
+
+graph.weight_between("A", "Z", np.array([1,1]))
+# np.array([1,1])
+```
+
+Notice that this graph is not conmutative since the weight of the path `["A", "C"]` is different from the weight of the path `["A", "B", "C]`.
