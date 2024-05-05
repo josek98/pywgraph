@@ -91,7 +91,7 @@ class TestPathFinding:
 
     def test_path_weight_empty(self):
         path = []
-        assert graph().path_weight(path) == 0.0
+        assert graph().path_weight(path, 0.0) == 0.0
 
     def test_path_weight_ae(self):
         path = ["A", "C", "D", "E"]
@@ -109,7 +109,7 @@ class TestPathFinding:
         assert graph().weight_between("A", "B") == 1.0
 
     def test_weight_between_az(self):
-        assert graph().weight_between("A", "Z") == 0.0
+        assert graph().weight_between("A", "Z", 0.0) == 0.0
 
     def test_weight_between_ae(self):
         assert graph().weight_between("A", "E") == pytest.approx(2.5 * 1.3 * 3.4)
