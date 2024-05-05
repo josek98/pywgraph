@@ -11,6 +11,7 @@ setup(
     long_description_content_type="text/markdown",
     author="josek98",
     author_email="josemmsscc98@gmail.com",
+    url="https://github.com/josek98/pywgraph",
     packages=find_packages(),
     python_requires=">=3.10",
     install_requires=[],
