@@ -38,15 +38,15 @@ jobs:
         name: python-package-distributions
         path: dist/
 
-  publish-to-testpypi:
+  publish-to-pypi::
     name: Publish Python 🐍 distribution 📦 to TestPyPI
     needs:
     - build
     runs-on: ubuntu-latest
 
     environment:
-      name: testpypi
-      url: https://test.pypi.org/p/pywgraph
+      name: pypi
+      url: https://pypi.org/p/pywgraph
 
     permissions:
       packages: write
