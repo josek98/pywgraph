@@ -1,4 +1,4 @@
-# pywgraph-0.4.0
+# pywgraph
 A library to manipulate weighted graphs in python. This library focus on directed graphs whose edges have weights. The weights of the graph can be any elements of a fixed mathematical group. By default, the underlying group is set to be the real numbers with the multiplication. Thus, when trasversing the graph, the weight of the path is the product of the weights of the edges, but in general, it is the product under the binary operation of the group. 
 
 For this reason, this package also includes a basic abstraction of a group. The group definition is base on:
