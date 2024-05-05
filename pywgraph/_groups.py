@@ -40,6 +40,10 @@ class Group:
     @property
     def inverse_operation(self) -> Callable[[T, T], T]:
         return self._inverse_operation
+    
+    @property
+    def hash_function(self) -> Callable[[T], int]:
+        return self._hash_function
 
     def inverse(
         self, element: T

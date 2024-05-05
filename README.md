@@ -1,13 +1,17 @@
-# pywgraph
-A library to manipulate weighted graphs in python. This library focus on directed graphs whose edges have weights. The goal is that the weights can be any set o objects that have an intern binary operation and an inverse. In mathematical meanings, a group. The reason behind this is to be able to trasverse the graph using the group operation. 
+# pywgraph-0.4.0
+A library to manipulate weighted graphs in python. This library focus on directed graphs whose edges have weights. The weights of the graph can be any elements of a fixed mathematical group. By default, the underlying group is set to be the real numbers with the multiplication. Thus, when trasversing the graph, the weight of the path is the product of the weights of the edges, but in general, it is the product under the binary operation of the group. 
 
-In the actual version, the weight is only allowed to be a float, and the operation is the multiplication. When the package has almost all of the necessary features to be used, I will add the possibility to use other types of weights.
+For this reason, this package also includes a basic abstraction of a group. The group definition is base on:
+*  The a function of two variables that return one element (the binary operation of the group).
+*  The inverse function of two variables, this is, the function `lambda x,y: x * y**-1`. This will be change to just the function that returns the inverse of an element, which is more natural in mathematical context.
+*  The identity element of the group.
+*  Optional, a hash function for the elements of the group. By default it is taken the standard python hash function. If your group contains not hashable elements you should provide one. 
 
 ## QUICKSTART
 
 ### Edges
 
-The main object to construct the graph is the `WeightedDirectedEdge` class. This represents a directed edge with a weight. The construction is as follows: 
+The main object to construct the graph is the `WeightedDirectedEdge` class. This represents a directed edge with a weight. The construction basic construction is as follows: 
 
 ```python
 from pywgraph import WeightedDirectedEdge
@@ -15,7 +19,7 @@ from pywgraph import WeightedDirectedEdge
 edge = WeightedDirectedEdge("A", "B", 0.5)
 ```
 
-The first two parameters are the nodes that the edge connects. The last parameter is the weight. It is important to notice that, since this is a directed edge, the order of the nodes is important.
+The first two parameters are the nodes that the edge connects. The last parameter is the weight. It is important to notice that, since this is a directed edge, the order of the nodes is important. Since we do have not specify any group, the default group is the real numbers with the multiplication. 
 
 You can call the start and end nodes with `edge.start` and `edge.end`, respectevely. To get the weight, simply use `edge.weight`. You can also get the *inverse edge* with `edge.inverse`. This is, the edge that connects the end node of `edge` to the start node of `edge` and has `1/edge.weight` as weight (as said previously, in the future this is meant to be the inverse of the weight in the underlying group).
 
@@ -24,9 +28,10 @@ Also, this class is hashable and iterable, yielding the start node, end node and
 
 ### Graph
 
-The graph is represented by the `WeightedDirectedGraph` class. This class is the main class of the package. The graph itself is a set of nodes and a set of `WeightedDirectedEdge`s. 
+The graph is represented by the `WeightedDirectedGraph` class. This is the main class of the package. The graph itself is a set of nodes and a set of `WeightedDirectedEdge`s. If you don`t specify it, the underlying group for the weights as said would be the real numbers with the multiplication. 
 
 It is also possible, and more comfortable, to create the graph using the `WeightedDirectedGraph.from_dict` method, which instantiates the graph from a dictionary. The keys of the dictionary are the starting nodes. The values must consists of another dictionary, where the keys are the ending nodes and the value is the weight of the edge. It is important that all nodes of the graph must be keys in the dictionary. If, for example, there is a node "C" that has no children nodes, then the dictionary must have a key "C" with a value of `{}`.
+As always, if you want to use another group for the weights you should specify it here. 
 
 ```python
 from pywgraph import WeightedDirectedGraph
@@ -128,3 +133,73 @@ grap.weight_between("A", "A")
 ```
 
 **WARNING**: Currently, if a path that contains a cycle is given the method `path_weight` will raise an error. In future this behaviour will be change to allow cycles. 
+
+### Graphs and groups
+
+#### Introduction to the `Group` class
+As said in the introduction, there is also an abstraction of a mathematical group. This object is call simply `Group`. To initialize it you need to provide a description of the group (string), the binary operation, the inverse operation and the identity element. If the elements of the group are not hashable, you should provide a hash function. One example could be an implementation of $\mathbb{R^2}$ under addition. For this we could represent vectors with numpy arrays, which are not hashable. We can construct this group as follows. 
+
+```python
+from pywgraph import Group
+
+group = Group(
+    "R^2 under addition",
+    lambda x, y: x + y,
+    lambda x, y: x - y,
+    np.zeros(2),
+    hash_function=lambda x: hash(tuple(x))
+)
+```
+
+This group instance is callable. The call gets two variables as inputs and return the operation between them. Since there is no type checking, the user is responsible of using it with valid inputs. You can also call the group operation with the property `Group.operation` and the inverse operation by `Group.inverse_operation`. The identity element is stored in the property `Group.neutral_element`. If you need to, you can also get back the hash function with the property `Group.hash_function`. 
+
+```python
+import numpy as np 
+vector_1 = np.array([1, 3])
+vector_2 = np.arra([-1, 7])
+
+group(vector_1, vector_2)
+# np.array([0, 10])
+
+group.operation(vector_1, vector_2)
+# np.array([0, 10])
+
+group.inverse_operation(vector_1, vector_2)
+# np.array([2, -4])
+
+group.neutral_element
+# np.array([0, 0])
+```
+
+<span style="color:red; font-weight:bold;">WARNING!!</span> Inverse operation and neutral element will change in the future. Inverse operation will be change to just inverse, a function that given an element returns its opposite element. The `Group.neutral_element` property will be change to `Group.identity` in the future. 
+
+#### General weights for edges
+
+Now that we introduce how to construct a group we will se how to use it to provide elements of an arbitrary group as weights of an edge. To do so you just need to create the group and add it as a parameter in the constructor of edge.
+
+```python
+from pywgraph import WeightedDirectedEdge, Group
+import numpy as np 
+group = Group(
+    "R^2 under addition",
+    lambda x, y: x + y,
+    lambda x, y: x - y,
+    np.zeros(2),
+    hash_function=lambda x: hash(tuple(x))
+)
+weight_of_edge = np.array([1, 2])
+
+edge = WeightedDirectedEdge("A", "B", weight_of_edge, group)
+```
+
+With the group information given, now this edge instance knows how to construct the inverse edge. 
+
+```python
+edge.inverse
+# WeightedDirectedEdge("B", "A", np.array([-1, -2]), group)
+```
+
+Is important to notice that there is no checking of wether the provide weight is a valid element of the given group. In the future there will be an option to implement an element checker in the group definition. 
+
+#### Weighted graphs
+
