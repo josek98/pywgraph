@@ -3,7 +3,7 @@ A library to manipulate weighted graphs in python. This library focus on directe
 
 For this reason, this package also includes a basic abstraction of a group. The group definition is base on:
 *  The a function of two variables that return one element (the binary operation of the group).
-*  The inverse function of two variables, this is, the function `lambda x,y: x * y**-1`. This will be change to just the function that returns the inverse of an element, which is more natural in mathematical context.
+*  The inverse function of an element. This is, the function that given an element of the group returns it inverse. 
 *  The identity element of the group.
 *  Optional, a hash function for the elements of the group. By default it is taken the standard python hash function. If your group contains not hashable elements you should provide one. 
 
@@ -143,15 +143,15 @@ As said in the introduction, there is also an abstraction of a mathematical grou
 from pywgraph import Group
 
 group = Group(
-    "R^2 under addition",
-    lambda x, y: x + y,
-    lambda x, y: x - y,
-    np.zeros(2),
+    name="R^2 under addition",
+    operation=lambda x, y: x + y,
+    inverse_function=lambda x: -x,
+    identity=np.zeros(2),
     hash_function=lambda x: hash(tuple(x))
 )
 ```
 
-This group instance is callable. The call gets two variables as inputs and return the operation between them. Since there is no type checking, the user is responsible of using it with valid inputs. You can also call the group operation with the property `Group.operation` and the inverse operation by `Group.inverse_operation`. The identity element is stored in the property `Group.neutral_element`. If you need to, you can also get back the hash function with the property `Group.hash_function`. 
+This group instance is callable. The call gets two variables as inputs and return the operation between them. Since there is no type checking, the user is responsible of using it with valid inputs. You can also call the group operation with the property `Group.operation` and the inverse operation by `Group.inverse_function`. The identity element is stored in the property `Group.identity`. If you need to, you can also get back the hash function with the property `Group.hash_function`. 
 
 ```python
 import numpy as np 
@@ -171,8 +171,6 @@ group.neutral_element
 # np.array([0, 0])
 ```
 
-<span style="color:red; font-weight:bold;">WARNING!!</span> Inverse operation and neutral element will change in the future. Inverse operation will be change to just inverse, a function that given an element returns its opposite element. The `Group.neutral_element` property will be change to `Group.identity` in the future. 
-
 #### General weights for edges
 
 Now that we introduce how to construct a group we will se how to use it to provide elements of an arbitrary group as weights of an edge. To do so you just need to create the group and add it as a parameter in the constructor of edge.
@@ -181,10 +179,10 @@ Now that we introduce how to construct a group we will se how to use it to provi
 from pywgraph import WeightedDirectedEdge, Group
 import numpy as np 
 group = Group(
-    "R^2 under addition",
-    lambda x, y: x + y,
-    lambda x, y: x - y,
-    np.zeros(2),
+    name="R^2 under addition",
+    operation=lambda x, y: x + y,
+    inverse_function=lambda x: -x,
+    identity=np.zeros(2),
     hash_function=lambda x: hash(tuple(x))
 )
 weight_of_edge = np.array([1, 2])
