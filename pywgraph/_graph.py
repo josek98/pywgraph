@@ -5,7 +5,7 @@ from ._exceptions import NodeNotFound  # type: ignore
 from ._utils import _find_path
 
 _default_group = Group(
-    "Real numbers with multiplication", 1.0, lambda x, y: x * y, lambda x, y: x / y
+    "Real numbers under multiplication", 1.0, lambda x, y: x * y, lambda x: 1 / x
 )
 
 
@@ -86,7 +86,7 @@ class WeightedDirectedGraph:
             return default_value
 
         if len(path) == 1:
-            return self.group.neutral_element
+            return self.group.identity
 
         uknown_nodes = set(path) - self.nodes
         if uknown_nodes:
@@ -99,7 +99,7 @@ class WeightedDirectedGraph:
             raise ValueError(f"The path {path} is not a valid path in the graph")
 
         result_weight = reduce(
-            self.group.operation, path_edges_weights, self.group.neutral_element  # type: ignore
+            self.group.operation, path_edges_weights, self.group.identity  # type: ignore
         )
         return result_weight
 

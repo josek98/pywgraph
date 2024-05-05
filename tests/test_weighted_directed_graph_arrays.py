@@ -6,9 +6,9 @@ from typing import Any  # for typing purposes
 def vector_group_multiplication() -> Group:
     group = Group(
         name="Vectors of dimension 2 with multiplication",
-        neutral_element=np.ones(2),
+        identity=np.ones(2),
         operation=lambda x, y: x * y,
-        inverse_operation=lambda x, y: x / y,
+        inverse_function=lambda x: 1 / x,
         hash_function=lambda x: hash(tuple(x)),
     )
     return group
@@ -17,9 +17,9 @@ def vector_group_multiplication() -> Group:
 def vector_group_addition() -> Group:
     group = Group(
         name="Vectors of dimension 2 with addition",
-        neutral_element=np.zeros(2),
+        identity=np.zeros(2),
         operation=lambda x, y: x + y,
-        inverse_operation=lambda x, y: x - y,
+        inverse_function=lambda x: -x,
         hash_function=lambda x: hash(tuple(x)),
     )
     return group

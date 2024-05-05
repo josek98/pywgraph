@@ -14,15 +14,41 @@ class Group:
     def __init__(
         self,
         name: str,
-        neutral_element: T,
+        identity: T,
         operation: Callable[[T, T], T],
-        inverse_operation: Callable[[T, T], T],
-        hash_function: Callable[[T], int] = hash
+        inverse_function: Callable[[T], T],
+        hash_function: Callable[[T], int] = hash,
     ) -> None:
+        """Abstraction of a mathematical group.
+
+        Parameters
+        ----------
+        name : str
+            Name of the group. Just a brief description.
+        identity : T
+            Identity element of the group.
+        operation : Callable[[T, T], T]
+            Binary operator of the group.
+        inverse : Callable[[T], T]
+            Function that returns the inverse of an element.
+        hash_function : Callable[[T], int], optional
+            Function that returns the hash of an element, by default hash. Mandatory
+            if elements of the group are not hashable.
+
+        Examples
+        --------
+        Real numbers with multiplication:
+        reals_mult = Group(
+            name="Real numbers under multiplication",
+            identity=1.0,
+            operation=lambda x, y: x * y,
+            inverse=lambda x: 1 / x
+        )"""
+
         self._name = name
-        self._neutral_element = neutral_element
+        self._identity = identity
         self._operation = operation
-        self._inverse_operation = inverse_operation
+        self._inverse_function = inverse_function
         self._hash_function = hash_function
 
     @property
@@ -30,28 +56,24 @@ class Group:
         return self._name
 
     @property
-    def neutral_element(self) -> T:  # type: ignore
-        return self._neutral_element
+    def identity(self) -> T:  # type: ignore
+        return self._identity
 
     @property
     def operation(self) -> Callable[[T, T], T]:
         return self._operation
 
     @property
-    def inverse_operation(self) -> Callable[[T, T], T]:
-        return self._inverse_operation
-    
+    def inverse_function(self) -> Callable[[T], T]:
+        return self._inverse_function
+
     @property
     def hash_function(self) -> Callable[[T], int]:
         return self._hash_function
 
-    def inverse(
-        self, element: T
-    ) -> (
-        T
-    ):  # Using self._neutral_element due to mypy not liking the return type of neutral_element property
-        return self.inverse_operation(self._neutral_element, element)
-    
+    def inverse(self, element: T) -> T:
+        return self.inverse_function(element)
+
     def equal(self, a: T, b: T) -> bool:
         return self._hash_function(a) == self._hash_function(b)
 
@@ -64,17 +86,22 @@ class Group:
 
 if __name__ == "__main__":
     reals_prod = Group(
-        "Real numbers with product", 1.0, lambda x, y: x * y, lambda x, y: x / y
+        "Real numbers with product", 1.0, lambda x, y: x * y, lambda x: 1 / x
     )
     print(reals_prod(2, 3))
 
-    reals_sum = Group(
-        "Real numbers with sum", 0.0, lambda x, y: x + y, lambda x, y: x - y
-    )
+    reals_sum = Group("Real numbers with sum", 0.0, lambda x, y: x + y, lambda x: -x)
     print(reals_sum(2, 3))
 
     import numpy as np
-    reals_3 = Group("R^3 space", np.zeros(3), lambda x, y: x + y, lambda x, y: x - y, lambda x: hash(tuple(x)))
+
+    reals_3 = Group(
+        "R^3 space",
+        np.zeros(3),
+        lambda x, y: x + y,
+        lambda x: -x,
+        lambda x: hash(tuple(x)),
+    )
     print(reals_3(np.array([1, 2, 3]), np.array([4, 5, 6])))
     print(reals_3.inverse(np.array([1, 1, 1])))
-    print(reals_3.equal(np.array([1,2,3]), np.array([1.0,2,3])))
+    print(reals_3.equal(np.array([1, 2, 3]), np.array([1.0, 2, 3])))

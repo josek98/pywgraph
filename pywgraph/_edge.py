@@ -3,7 +3,7 @@ from ._groups import Group
 
 T = TypeVar("T")
 _default_group = Group(
-    "Real numbers with multiplication", 1.0, lambda x, y: x * y, lambda x, y: x / y
+    "Real numbers with multiplication", 1.0, lambda x, y: x * y, lambda x: 1 / x
 )
 
 
