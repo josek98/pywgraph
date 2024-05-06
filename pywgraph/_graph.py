@@ -73,7 +73,7 @@ class WeightedDirectedGraph:
         self,
         start: str,
         end: str,
-        weight: "Group.element" | None = None,
+        weight: "Group.element" = None,
         path: list[str] | None = None,
         allow_inverse: bool = True,
         inplace: bool = False
@@ -91,7 +91,9 @@ class WeightedDirectedGraph:
             to be calculated finding a path connecting the edges. 
         path: Optional[list[str]]
             If this is provided and no weight is given the weight will be calculated using this path. 
-            If this path is not possible and exception will be raised. 
+            If this path is not possible and exception will be raised. It is possible to use 
+            a path that exists but does not connect start and end node, this might be removed 
+            in future versions.
         allow_inverse: bool
             If True, allows the creation of the inverse edge to find a path between edges. 
         """
@@ -111,11 +113,14 @@ class WeightedDirectedGraph:
             if path is not None: # Apply weight of the given path
                 weight = search_graph.path_weight(path)
             else: # Find path to get a weight
-                weight = search_graph.find_path(start, end)
+                path = search_graph.find_path(start, end)
                 if not path:
                     print(f"Unable to find a weight to connect edge {start} -> {end}")
+                    if inplace:
+                        return 
+                    return self
                 else: 
-                    weight = self.path_weight(path)
+                    weight = search_graph.path_weight(path)
 
         if inplace:
             self._edges.add(WeightedDirectedEdge(start, end, weight, self.group))
