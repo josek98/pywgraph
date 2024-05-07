@@ -1,7 +1,7 @@
 from functools import reduce  # type: ignore
 from ._groups import Group
 from ._edge import WeightedDirectedEdge  # type: ignore
-from ._exceptions import NodeNotFound  # type: ignore
+from ._exceptions import NodeNotFound, NodeAlreadyExists, EdgeAlreadyExists  # type: ignore
 from ._utils import _find_path
 
 _default_group = Group(
@@ -55,6 +55,83 @@ class WeightedDirectedGraph:
         if node not in self._nodes:
             raise NodeNotFound(node)
         return {edge.start for edge in self._edges if edge.end == node}
+
+    def add_node(self, node: str, inplace: bool = False):
+        """Adds a node to the graph"""
+        if node in self._nodes:
+            raise NodeAlreadyExists(node)
+        if inplace:
+            self._nodes.add(node)
+            return
+
+        return_graph = WeightedDirectedGraph(
+            nodes=self._nodes | {node}, edges=self._edges, group=self.group
+        )
+        return return_graph
+
+    def add_edge(
+        self,
+        start: str,
+        end: str,
+        weight: "Group.element" = None,
+        path: list[str] | None = None,
+        allow_inverse: bool = True,
+        inplace: bool = False
+    ):
+        """Adds an edge connectingh two existing nodes.
+        
+        Parameter
+        --------
+        start: str
+            The start node of the edge. Must be an existing node from the graph. 
+        end: str
+            The end node of the edge. Must be an existing node from the graph. 
+        weight: Optional[Group.element]
+            The weight of the edge. If no weight and not path is provided, the weight will be try 
+            to be calculated finding a path connecting the edges. 
+        path: Optional[list[str]]
+            If this is provided and no weight is given the weight will be calculated using this path. 
+            If this path is not possible and exception will be raised. It is possible to use 
+            a path that exists but does not connect start and end node, this might be removed 
+            in future versions.
+        allow_inverse: bool
+            If True, allows the creation of the inverse edge to find a path between edges. 
+        """
+
+        bad_nodes = {start, end} - self._nodes
+        if bad_nodes:
+            raise NodeNotFound(bad_nodes)
+        if (start, end) in {(edge.start, edge.end) for edge in self._edges}:
+            raise EdgeAlreadyExists(start, end)
+        
+        if weight is None: # Find weight in another way
+            if allow_inverse: 
+                search_graph = self.add_reverse_edges(inplace=False)
+            else: 
+                search_graph = self
+
+            if path is not None: # Apply weight of the given path
+                weight = search_graph.path_weight(path)
+            else: # Find path to get a weight
+                path = search_graph.find_path(start, end)
+                if not path:
+                    print(f"Unable to find a weight to connect edge {start} -> {end}")
+                    if inplace:
+                        return 
+                    return self
+                else: 
+                    weight = search_graph.path_weight(path)
+
+        if inplace:
+            self._edges.add(WeightedDirectedEdge(start, end, weight, self.group))
+            return
+
+        return_graph = WeightedDirectedGraph(
+            nodes=self._nodes,
+            edges=self._edges | {WeightedDirectedEdge(start, end, weight)},
+            group=self.group,
+        )
+        return return_graph
 
     def add_reverse_edges(self, inplace: bool = False):
         """Adds the missing inverse direction edges"""

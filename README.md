@@ -247,3 +247,10 @@ graph.weight_between("A", "Z", np.array([1,1]))
 ```
 
 Notice that this graph is not conmutative since the weight of the path `["A", "C"]` is different from the weight of the path `["A", "B", "C]`.
+
+## Release Notes
+
+### Version 1.0.1 (2024-05-07)
+
+- Added a method to `WeightedDirectedGraph` to add a new node. 
+- Added a method to `WeightedDirectedGraph` to add a new edge. This can be doned given the desire weight, given a path between the nodes to connect and use the product of the weights or just let the graph find a path between nodes and use the product of the weights. 
