@@ -1,10 +1,10 @@
 from functools import reduce  # type: ignore
-from ._groups import Group
+from ..groups import Group
 from ._edge import WeightedDirectedEdge  # type: ignore
 from functools import reduce  # type: ignore
 from functools import reduce  # type: ignore
-from .exceptions import NodeNotFound, NodeAlreadyExists, EdgeAlreadyExists, EdgeNotFound  # type: ignore
-from ._utils import _find_path
+from ..exceptions import NodeNotFound, NodeAlreadyExists, EdgeAlreadyExists, EdgeNotFound  # type: ignore
+from .._utils import _find_path
 
 _default_group = Group(
     "Real numbers under multiplication", 1.0, lambda x, y: x * y, lambda x: 1 / x
