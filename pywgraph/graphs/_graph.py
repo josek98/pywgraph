@@ -1,8 +1,6 @@
 from functools import reduce  # type: ignore
 from ..groups import Group
 from ._edge import WeightedDirectedEdge  # type: ignore
-from functools import reduce  # type: ignore
-from functools import reduce  # type: ignore
 from ..exceptions import NodeNotFound, NodeAlreadyExists, EdgeAlreadyExists, EdgeNotFound  # type: ignore
 from .._utils import _find_path
 
