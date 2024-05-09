@@ -69,6 +69,26 @@ class WeightedDirectedGraph:
         )
         return return_graph
 
+    def delete_node(self, node: str, inplace: bool = False):
+        """Deletes a node from the graph. Also removes all edges connected to this node."""
+        if node not in self._nodes:
+            raise NodeNotFound(node)
+
+        node_edges = {
+            edge for edge in self._edges if edge.start == node or edge.end == node
+        }
+        good_edges = self.edges - node_edges
+
+        if inplace:
+            self._nodes.remove(node)
+            self._edges = good_edges
+            return
+
+        return_graph = WeightedDirectedGraph(
+            nodes=self._nodes - {node}, edges=good_edges, group=self.group
+        )
+        return return_graph
+
     def add_edge(
         self,
         start: str,
@@ -76,26 +96,26 @@ class WeightedDirectedGraph:
         weight: "Group.element" = None,
         path: list[str] | None = None,
         allow_inverse: bool = True,
-        inplace: bool = False
+        inplace: bool = False,
     ):
         """Adds an edge connectingh two existing nodes.
-        
+
         Parameter
         --------
         start: str
-            The start node of the edge. Must be an existing node from the graph. 
+            The start node of the edge. Must be an existing node from the graph.
         end: str
-            The end node of the edge. Must be an existing node from the graph. 
+            The end node of the edge. Must be an existing node from the graph.
         weight: Optional[Group.element]
-            The weight of the edge. If no weight and not path is provided, the weight will be try 
-            to be calculated finding a path connecting the edges. 
+            The weight of the edge. If no weight and not path is provided, the weight will be try
+            to be calculated finding a path connecting the edges.
         path: Optional[list[str]]
-            If this is provided and no weight is given the weight will be calculated using this path. 
-            If this path is not possible and exception will be raised. It is possible to use 
-            a path that exists but does not connect start and end node, this might be removed 
+            If this is provided and no weight is given the weight will be calculated using this path.
+            If this path is not possible and exception will be raised. It is possible to use
+            a path that exists but does not connect start and end node, this might be removed
             in future versions.
         allow_inverse: bool
-            If True, allows the creation of the inverse edge to find a path between edges. 
+            If True, allows the creation of the inverse edge to find a path between edges.
         """
 
         bad_nodes = {start, end} - self._nodes
@@ -103,23 +123,23 @@ class WeightedDirectedGraph:
             raise NodeNotFound(bad_nodes)
         if (start, end) in {(edge.start, edge.end) for edge in self._edges}:
             raise EdgeAlreadyExists(start, end)
-        
-        if weight is None: # Find weight in another way
-            if allow_inverse: 
+
+        if weight is None:  # Find weight in another way
+            if allow_inverse:
                 search_graph = self.add_reverse_edges(inplace=False)
-            else: 
+            else:
                 search_graph = self
 
-            if path is not None: # Apply weight of the given path
+            if path is not None:  # Apply weight of the given path
                 weight = search_graph.path_weight(path)
-            else: # Find path to get a weight
+            else:  # Find path to get a weight
                 path = search_graph.find_path(start, end)
                 if not path:
                     print(f"Unable to find a weight to connect edge {start} -> {end}")
                     if inplace:
-                        return 
+                        return
                     return self
-                else: 
+                else:
                     weight = search_graph.path_weight(path)
 
         if inplace:

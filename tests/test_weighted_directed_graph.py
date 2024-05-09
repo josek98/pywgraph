@@ -116,6 +116,26 @@ class TestWeightedDirectedGraph:
         with pytest.raises(NodeAlreadyExists):
             graph().add_node("A")
 
+    def test_delete_node(self): 
+        graph_copy = graph()
+        new_dict = _dict_graph.copy()
+        del new_dict["A"]
+        new_graph = WeightedDirectedGraph.from_dict(new_dict)
+        assert graph_copy.delete_node("A", inplace=False) == new_graph
+
+    def test_delete_node_inplace(self):
+        graph_copy = graph()
+        new_dict = _dict_graph.copy()
+        del new_dict["A"]
+        new_graph = WeightedDirectedGraph.from_dict(new_dict)
+        graph_copy.delete_node("A", inplace=True)
+        assert graph_copy == new_graph
+
+    def test_delete_node_exception(self):
+        with pytest.raises(NodeNotFound):
+            graph().delete_node("D")
+
+
     # region Testing adding edges
     def test_add_edge_naive(self):
         graph_copy = graph()
