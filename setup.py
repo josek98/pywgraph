@@ -5,8 +5,8 @@ with open("README.md", "r",) as f:
 
 setup(
     name="pywgraph",
-    version="1.0.1",
-    description="A python implementation of weighted directed graphs where weights can be elements of a mathematical group",
+    version="1.0.2",
+    description="A python implementation of weighted directed graphs",
     long_description=long_description,
     long_description_content_type="text/markdown",
     author="josek98",

@@ -4,7 +4,8 @@ from pywgraph import (
     WeightedDirectedEdge, 
     NodeAlreadyExists, 
     NodeNotFound,
-    EdgeAlreadyExists
+    EdgeAlreadyExists,
+    EdgeNotFound
 )
 
 
@@ -116,6 +117,25 @@ class TestWeightedDirectedGraph:
         with pytest.raises(NodeAlreadyExists):
             graph().add_node("A")
 
+    def test_delete_node(self): 
+        graph_copy = graph()
+        new_dict = _dict_graph.copy()
+        del new_dict["A"]
+        new_graph = WeightedDirectedGraph.from_dict(new_dict)
+        assert graph_copy.delete_node("A", inplace=False) == new_graph
+
+    def test_delete_node_inplace(self):
+        graph_copy = graph()
+        new_dict = _dict_graph.copy()
+        del new_dict["A"]
+        new_graph = WeightedDirectedGraph.from_dict(new_dict)
+        graph_copy.delete_node("A", inplace=True)
+        assert graph_copy == new_graph
+
+    def test_delete_node_exception(self):
+        with pytest.raises(NodeNotFound):
+            graph().delete_node("D")
+
     # region Testing adding edges
     def test_add_edge_naive(self):
         graph_copy = graph()
@@ -224,3 +244,28 @@ class TestWeightedDirectedGraph:
             graph_copy.add_edge(start="A", end="B", weight=2, inplace=True)
 
         assert graph_copy == graph()
+
+    def test_delete_edge(self): 
+        graph_copy = graph()
+        new_dict = _dict_graph.copy()
+        new_dict["B"] = {}
+        new_graph = WeightedDirectedGraph.from_dict(new_dict)
+        assert new_graph == graph_copy.delete_edge(start="B", end="C", inplace=False)
+
+    def test_delete_edge_inplace(self):
+        graph_copy = graph()
+        new_dict = _dict_graph.copy()
+        new_dict["B"] = {}
+        new_graph = WeightedDirectedGraph.from_dict(new_dict)
+        graph_copy.delete_edge(start="B", end="C", inplace=True)
+        assert graph_copy == new_graph
+
+    def test_delete_edge_bad_nodes(self):
+        graph_copy = graph()
+        with pytest.raises(NodeNotFound):
+            graph_copy.delete_edge(start="S", end="A")
+
+    def test_delete_edge_bad_edges(self):
+        graph_copy = graph()
+        with pytest.raises(EdgeNotFound):
+            graph_copy.delete_edge(start="C", end="B")

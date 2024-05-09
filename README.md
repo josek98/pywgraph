@@ -254,3 +254,8 @@ Notice that this graph is not conmutative since the weight of the path `["A", "C
 
 - Added a method to `WeightedDirectedGraph` to add a new node. 
 - Added a method to `WeightedDirectedGraph` to add a new edge. This can be doned given the desire weight, given a path between the nodes to connect and use the product of the weights or just let the graph find a path between nodes and use the product of the weights. 
+
+### Version 1.0.2 (2024-05-09)
+
+- Added a method to `WeightedDirectedGraph` to remove a node. 
+- Added a method to `WeightedDirectedGraph` to remove an edge. 

@@ -1,5 +1,5 @@
 from typing import TypeVar
-from ._groups import Group
+from ..groups import Group
 
 T = TypeVar("T")
 _default_group = Group(
