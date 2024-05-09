@@ -5,7 +5,7 @@ with open("README.md", "r",) as f:
 
 setup(
     name="pywgraph",
-    version="1.0.1",
+    version="1.0.2",
     description="A python implementation of weighted directed graphs",
     long_description=long_description,
     long_description_content_type="text/markdown",
