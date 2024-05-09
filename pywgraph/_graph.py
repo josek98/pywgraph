@@ -1,7 +1,9 @@
 from functools import reduce  # type: ignore
 from ._groups import Group
 from ._edge import WeightedDirectedEdge  # type: ignore
-from ._exceptions import NodeNotFound, NodeAlreadyExists, EdgeAlreadyExists  # type: ignore
+from functools import reduce  # type: ignore
+from functools import reduce  # type: ignore
+from .exceptions import NodeNotFound, NodeAlreadyExists, EdgeAlreadyExists, EdgeNotFound  # type: ignore
 from ._utils import _find_path
 
 _default_group = Group(
@@ -152,6 +154,24 @@ class WeightedDirectedGraph:
             group=self.group,
         )
         return return_graph
+
+    def delete_edge(self, start: str, end: str, inplace: bool = False):
+        """Deletes an edge connecting two existing nodes."""
+
+        bad_nodes = {start, end} - self._nodes
+        if bad_nodes:
+            raise NodeNotFound(bad_nodes)
+
+        good_edges = {
+            edge for edge in self._edges if (edge.start, edge.end) != (start, end)
+        }
+        if good_edges == self._edges:
+            raise EdgeNotFound(start, end)
+        if inplace:
+            self._edges = good_edges
+            return
+
+        return WeightedDirectedGraph(self._nodes, good_edges, self.group)
 
     def add_reverse_edges(self, inplace: bool = False):
         """Adds the missing inverse direction edges"""
