@@ -38,14 +38,27 @@ class TestWeightedDirectedGraph:
             WeightedDirectedEdge("B", "C", 10),
         }
 
+    @pytest.mark.deprecated
     def test_well_defined(self):
         assert graph().check_definition()
 
+    def test_well_defined_property(self): 
+        assert graph().is_well_defined
+
+    @pytest.mark.deprecated
     def test_bad_defined(self):
         assert (
             WeightedDirectedGraph(
                 {"A"}, {WeightedDirectedEdge("A", "B", 7)}
             ).check_definition()
+            == False
+        )
+
+    def test_bad_defined_property(self):
+        assert (
+            WeightedDirectedGraph(
+                {"A"}, {WeightedDirectedEdge("A", "B", 7)}
+            ).is_well_defined
             == False
         )
 

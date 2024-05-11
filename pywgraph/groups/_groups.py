@@ -18,7 +18,7 @@ class Group:
         operation: Callable[[T, T], T],
         inverse_function: Callable[[T], T],
         hash_function: Callable[[T], int] = hash,
-        group_checker: Callable[[Any], bool] | None = None
+        group_checker: Callable[[Any], bool] | None = None,
     ) -> None:
         """Abstraction of a mathematical group.
 
@@ -80,7 +80,7 @@ class Group:
 
     def equal(self, a: T, b: T) -> bool:
         return self._hash_function(a) == self._hash_function(b)
-    
+
     def check(self, element: Any) -> bool:
         if self._group_checker is None:
             raise ValueError("Group checker not defined")
@@ -104,23 +104,24 @@ if __name__ == "__main__":
 
     import numpy as np
 
-    def is_r3_element(element: Any) -> bool: 
-        if not isinstance(element, np.ndarray): 
-            return False 
-        if element.shape != (3,): 
-            return False 
-        return True 
+    def is_r3_element(element: Any) -> bool:
+        if not isinstance(element, np.ndarray):
+            return False
+        if element.shape != (3,):
+            return False
+        return True
+
     reals_3 = Group(
         "R^3 space",
         np.zeros(3),
         lambda x, y: x + y,
         lambda x: -x,
         lambda x: hash(tuple(x)),
-        is_r3_element
+        is_r3_element,
     )
     print(reals_3(np.array([1, 2, 3]), np.array([4, 5, 6])))
     print(reals_3.inverse(np.array([1, 1, 1])))
     print(reals_3.equal(np.array([1, 2, 3]), np.array([1.0, 2, 3])))
-    print(reals_3.check(np.array([1,2,3])))
-    print(reals_3.check(np.array([1,3])))
-    print(reals_3.check([1,3,3]))
+    print(reals_3.check(np.array([1, 2, 3])))
+    print(reals_3.check(np.array([1, 3])))
+    print(reals_3.check([1, 3, 3]))

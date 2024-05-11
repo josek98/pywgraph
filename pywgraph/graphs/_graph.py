@@ -1,12 +1,9 @@
 from functools import reduce  # type: ignore
-from ..groups import Group
+from warnings import warn  # type: ignore
+from ..groups import Group, real_multiplicative_group
 from ._edge import WeightedDirectedEdge  # type: ignore
 from ..exceptions import NodeNotFound, NodeAlreadyExists, EdgeAlreadyExists, EdgeNotFound  # type: ignore
 from .._utils import _find_path
-
-_default_group = Group(
-    "Real numbers under multiplication", 1.0, lambda x, y: x * y, lambda x: 1 / x
-)
 
 
 def _check_nodes_in_edges(
@@ -17,12 +14,25 @@ def _check_nodes_in_edges(
     return edge_nodes <= nodes
 
 
+# def _check_weights_of_edges(
+#     edges: set[WeightedDirectedEdge],
+#     group: Group,
+# ) -> set[WeightedDirectedEdge]:
+#     if group._group_checker is None:
+#         raise ValueError(
+#             "Unable to check if weights are in the group because no checker function was provided"
+#         )
+#     bad_edges = {edge for edge in edges if not group.check(edge.weight)}
+#     return bad_edges
+
+
 class WeightedDirectedGraph:
+
     def __init__(
         self,
         nodes: set[str],
         edges: set[WeightedDirectedEdge],
-        group: Group = _default_group,
+        group: Group = real_multiplicative_group,
     ) -> None:
         self._nodes = nodes
         self._edges = edges
@@ -39,9 +49,18 @@ class WeightedDirectedGraph:
     @property
     def group(self) -> Group:
         return self._group
+    
+    @property
+    def is_well_defined(self) -> bool:
+        """Checks if the graph is defined correctly. This is, that all edges nodes are in the nodes set."""
+        return _check_nodes_in_edges(self.nodes, self.edges)
 
     def check_definition(self) -> bool:
         """Checks if the graph is defined correctly."""
+        warn(
+            "This method is deprecated and will be removed. Instead, use the property 'is_well_defined'.",
+            Warning,
+        )
         return _check_nodes_in_edges(self.nodes, self.edges)
 
     def children(self, node: str) -> set[str]:
@@ -227,7 +246,9 @@ class WeightedDirectedGraph:
 
     @classmethod
     def from_dict(
-        cls, dict: dict[str, dict[str, "Group.element"]], group: Group = _default_group
+        cls,
+        dict: dict[str, dict[str, "Group.element"]],
+        group: Group = real_multiplicative_group,
     ) -> "WeightedDirectedGraph":
         """Creates a graph from a dictionary."""
         nodes = set(dict.keys())
