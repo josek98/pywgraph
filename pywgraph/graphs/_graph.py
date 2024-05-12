@@ -381,18 +381,3 @@ class WeightedDirectedGraph:
                 explorers.update(new_explorers)
 
         return cycles
-
-
-if __name__ == "__main__":
-    nodes = {"A", "B", "C", "D", "E"}
-    edges = {
-        WeightedDirectedEdge("A", "B", 1),
-        WeightedDirectedEdge("A", "C", 2),
-        WeightedDirectedEdge("B", "D", 3),
-        WeightedDirectedEdge("E", "A", 4),
-    }
-
-    graph = WeightedDirectedGraph(nodes, edges)
-    print(graph)
-    print(graph.children("E"))
-    print(graph.parents("B"))
