@@ -3,7 +3,6 @@ from warnings import warn  # type: ignore
 from ..groups import Group, real_multiplicative_group
 from ._edge import WeightedDirectedEdge  # type: ignore
 from ..exceptions import NodeNotFound, NodeAlreadyExists, EdgeAlreadyExists, EdgeNotFound  # type: ignore
-from .._utils import _find_path
 
 
 def _check_nodes_in_edges(
@@ -38,6 +37,7 @@ class WeightedDirectedGraph:
         self._edges = edges
         self._group = group
 
+    # region Properties
     @property
     def nodes(self) -> set[str]:
         return self._nodes
@@ -49,12 +49,13 @@ class WeightedDirectedGraph:
     @property
     def group(self) -> Group:
         return self._group
-    
+
     @property
     def is_well_defined(self) -> bool:
         """Checks if the graph is defined correctly. This is, that all edges nodes are in the nodes set."""
         return _check_nodes_in_edges(self.nodes, self.edges)
 
+    # region Node methods
     def check_definition(self) -> bool:
         """Checks if the graph is defined correctly."""
         warn(
@@ -108,6 +109,7 @@ class WeightedDirectedGraph:
         )
         return return_graph
 
+    #region Edge methods
     def add_edge(
         self,
         start: str,
@@ -205,12 +207,13 @@ class WeightedDirectedGraph:
 
         return WeightedDirectedGraph(self._nodes, self._edges | inverse_edges)
 
+    #region Paths methods
     def find_path(self, start: str, end: str) -> list[str]:
         """Finds a path between two nodes."""
         uknown_nodes = {start, end} - self.nodes
         if uknown_nodes:
             raise NodeNotFound(uknown_nodes)
-        return _find_path(self, start, end)
+        return self._find_path(start, end)
 
     def path_weight(
         self, path: list[str], default_value: "Group.element" = None
@@ -244,6 +247,7 @@ class WeightedDirectedGraph:
         path = self.find_path(start, end)
         return self.path_weight(path, default)
 
+    # region Classmethods
     @classmethod
     def from_dict(
         cls,
@@ -259,6 +263,7 @@ class WeightedDirectedGraph:
         }
         return cls(nodes, edges, group)
 
+    # region Dunder methods
     def __repr__(self) -> str:
         nodes_str = f"Nodes: {self.nodes}\n"
         edges_str = f"Edges:\n"
@@ -270,6 +275,38 @@ class WeightedDirectedGraph:
         if isinstance(other, WeightedDirectedGraph):
             return self._nodes == other._nodes and self._edges == other._edges
         return False
+
+    # region Auxiliary methods
+    def _iterate_aux(
+        self, search_path: list[str], visited_nodes: set, end: str
+    ) -> tuple[list[list[str]], set[str]]:
+        """Auxiliary function to iterate through the graph."""
+        current_node = search_path[-1]
+        if current_node == end:
+            return [[]], visited_nodes
+
+        children = self.children(current_node)
+        new_paths = [
+            search_path + [child] for child in children if child not in visited_nodes
+        ]
+        visited_nodes.update(children)
+        return new_paths, visited_nodes
+
+    def _find_path(self, start: str, end: str) -> list[str]:
+        """Finds the shortest path between two nodes in a graph."""
+        all_paths = [[start]]
+        visited_nodes = {start}
+        while (end not in visited_nodes) and (len(all_paths) != 0):
+            search_path = all_paths.pop(0)
+            new_paths, visited_nodes = self._iterate_aux(
+                search_path, visited_nodes, end
+            )
+            all_paths.extend(new_paths)
+
+        if all_paths:
+            return [path for path in all_paths if path[-1] == end][0]
+
+        return []
 
 
 if __name__ == "__main__":
