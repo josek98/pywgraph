@@ -1,8 +1,10 @@
 from functools import reduce  # type: ignore
 from warnings import warn  # type: ignore
 from ..groups import Group, real_multiplicative_group
-from ._edge import WeightedDirectedEdge  # type: ignore
 from ..exceptions import NodeNotFound, NodeAlreadyExists, EdgeAlreadyExists, EdgeNotFound  # type: ignore
+from ._edge import WeightedDirectedEdge  # type: ignore
+from ._cycles import Cycle
+from ._path_explorer import PathExplorer
 
 
 def _check_nodes_in_edges(
@@ -54,6 +56,23 @@ class WeightedDirectedGraph:
     def is_well_defined(self) -> bool:
         """Checks if the graph is defined correctly. This is, that all edges nodes are in the nodes set."""
         return _check_nodes_in_edges(self.nodes, self.edges)
+
+    @property
+    def cycles(self) -> set[Cycle]:
+        """Returns all cycles in the graph."""
+        return set.union(*[self.get_node_cycles(node) for node in self.nodes])
+
+    @property
+    def is_conmutative(self) -> bool:
+        """Checks"""
+        complete_graph = self.add_reverse_edges(inplace=False)
+        group = self.group
+        identity = group.identity
+        check = all(
+            group.equal(complete_graph.path_weight(cycle), identity)
+            for cycle in complete_graph.cycles
+        )
+        return check
 
     # region Node methods
     def check_definition(self) -> bool:
@@ -109,7 +128,7 @@ class WeightedDirectedGraph:
         )
         return return_graph
 
-    #region Edge methods
+    # region Edge methods
     def add_edge(
         self,
         start: str,
@@ -205,9 +224,11 @@ class WeightedDirectedGraph:
             self._edges.update(inverse_edges)
             return
 
-        return WeightedDirectedGraph(self._nodes, self._edges | inverse_edges)
+        return WeightedDirectedGraph(
+            self._nodes, self._edges | inverse_edges, self.group
+        )
 
-    #region Paths methods
+    # region Paths methods
     def find_path(self, start: str, end: str) -> list[str]:
         """Finds a path between two nodes."""
         uknown_nodes = {start, end} - self.nodes
@@ -215,25 +236,36 @@ class WeightedDirectedGraph:
             raise NodeNotFound(uknown_nodes)
         return self._find_path(start, end)
 
+    def get_node_cycles(self, node: str) -> set[Cycle]:
+        """Returns a list of Cycle objects containing all the simple cycles that contain the given node."""
+        return self._find_cycles(node)
+
     def path_weight(
-        self, path: list[str], default_value: "Group.element" = None
+        self, path: list[str] | Cycle, default_value: "Group.element" = None
     ) -> "Group.element":
         """Returns the weight of following the given path in the graph"""
-        if not path:
+
+        if isinstance(path, Cycle):
+            path_copy = path.cycle.copy()
+            path_copy.append(path_copy[0])
+        else:
+            path_copy = path.copy()
+
+        if not path_copy:
             return default_value
 
-        if len(path) == 1:
+        if len(path_copy) == 1:
             return self.group.identity
 
-        uknown_nodes = set(path) - self.nodes
+        uknown_nodes = set(path_copy) - self.nodes
         if uknown_nodes:
             raise NodeNotFound(uknown_nodes)
-        path_pairs = list(zip(path, path[1:]))
+        path_pairs = list(zip(path_copy, path_copy[1:]))
         path_edges_weights = [
             edge._weight for edge in self.edges if (edge.start, edge.end) in path_pairs
         ]
         if len(path_pairs) != len(path_edges_weights):
-            raise ValueError(f"The path {path} is not a valid path in the graph")
+            raise ValueError(f"The path {path_copy} is not a valid path in the graph")
 
         result_weight = reduce(
             self.group.operation, path_edges_weights, self.group.identity  # type: ignore
@@ -276,6 +308,9 @@ class WeightedDirectedGraph:
             return self._nodes == other._nodes and self._edges == other._edges
         return False
 
+    def __len__(self) -> int:
+        return len(self._nodes)
+
     # region Auxiliary methods
     def _iterate_aux(
         self, search_path: list[str], visited_nodes: set, end: str
@@ -307,6 +342,45 @@ class WeightedDirectedGraph:
             return [path for path in all_paths if path[-1] == end][0]
 
         return []
+
+    def _cycle_aux(
+        self, explorer: PathExplorer, target: str
+    ) -> tuple[set, str] | tuple[Cycle, str]:
+        current_node = explorer.path[-1]
+        if current_node == target:
+            return Cycle(explorer.path[:-1]), "cycle"
+
+        children = self.children(current_node)
+        unexplored_nodes = children - explorer.visited
+        if not unexplored_nodes:
+            return set(), "dead explorer"
+
+        updated_visited = explorer.visited | {current_node}
+        new_explorers = {
+            PathExplorer(explorer.path + [node], updated_visited)
+            for node in unexplored_nodes
+        }
+        return new_explorers, "continue"
+
+    def _find_cycles(self, start: str) -> set[Cycle]:
+        first_children = self.children(start)
+        if not first_children:
+            return set()
+
+        explorers: set[PathExplorer] = {
+            PathExplorer([start, child]) for child in first_children
+        }
+        cycles: set[Cycle] = set()
+
+        while explorers:
+            result, state = self._cycle_aux(explorers.pop(), start)
+            if state == "cycle":
+                cycles.add(result)  # type: ignore
+            elif state == "continue":
+                new_explorers = result - explorers  # type: ignore
+                explorers.update(new_explorers)
+
+        return cycles
 
 
 if __name__ == "__main__":
