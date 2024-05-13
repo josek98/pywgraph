@@ -232,29 +232,28 @@ class WeightedDirectedGraph:
         specific_max_visitations: dict[str, int] = {},
         max_iter: int = 1_000,
     ) -> list[Path]:
-        
+
         bad_nodes = {start, end} - self._nodes
         if bad_nodes:
             raise NodeNotFound(bad_nodes)
-        
+
         found_paths = self._find_paths(
             start, end, general_max_visitations, specific_max_visitations, max_iter
         )
         return found_paths
-    
-    def find_path(
-        self,
-        start: str,
-        end: str
-    ) -> Path: 
-        return self.find_paths(start=start, end=end)[0]
+
+    def find_path(self, start: str, end: str) -> Path | list:
+        found_paths = self.find_paths(start=start, end=end)
+        if found_paths:
+            return found_paths[0]
+        return []
 
     def get_node_cycles(self, node: str) -> list[Cycle]:
         """Returns a list of Cycle objects containing all the simple cycles that contain the given node."""
         return self._find_cycles(node)
 
     def path_weight(
-        self, path: Path, default_value: "Group.element" = None
+        self, path: Path | list, default_value: "Group.element" = None
     ) -> "Group.element":
         """Returns the weight of following the given path in the graph"""
 
@@ -285,7 +284,7 @@ class WeightedDirectedGraph:
         self, start: str, end: str, default: "Group.element" = None
     ) -> "Group.element":
         """Returns the weight of the shortest path between two nodes."""
-        path = self.find_paths(start, end)[0]
+        path = self.find_path(start, end)
         return self.path_weight(path, default)
 
     # region Classmethods
@@ -391,12 +390,12 @@ class WeightedDirectedGraph:
             warn(f"Max iterations reached ({max_iter})", Warning)
 
         return all_paths
-    
+
     def _find_cycles(self, node: str) -> list[Cycle]:
         list_cycles = self._find_paths(
-            start=node, 
-            end=node, 
+            start=node,
+            end=node,
             general_max_visitations=1,
-            specific_max_visitations={node: 2}
+            specific_max_visitations={node: 2},
         )
         return [Cycle.from_path(cycle) for cycle in list_cycles]
