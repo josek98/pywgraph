@@ -32,15 +32,15 @@ class Path(list[str]):
     def __len__(self) -> int:
         return super().__len__() - 1
 
-    def __hash__(self) -> int: # type: ignore 
-        return hash(tuple(self)) # Mypy don't allow to override hash for list since lists are not hashable
+    def __hash__(self) -> int:  # type: ignore
+        return hash(
+            tuple(self)
+        )  # Mypy don't allow to override hash for list since lists are not hashable
 
 
 class Cycle(Path):
 
     def __init__(self, cycle: list[str]) -> None:
-        if len(cycle) < 3:
-            raise ValueError("A cycle must have at least three elements")
         if cycle[0] != cycle[-1]:
             raise ValueError("A cycle must start and end with the same element")
         super().__init__(cycle)
@@ -61,8 +61,10 @@ class Cycle(Path):
         else:
             raise ValueError("The path is not a cycle")
 
-    def __hash__(self) -> int: # type: ignore
-        return hash(tuple(self.canonic_representation)) # Mypy don't allow to override hash for list since lists are not hashable
+    def __hash__(self) -> int:  # type: ignore
+        return hash(
+            tuple(self.canonic_representation)
+        )  # Mypy don't allow to override hash for list since lists are not hashable
 
     def __eq__(self, other: object) -> bool:
         other_ = other
@@ -107,3 +109,6 @@ class PathExplorer:
 
     def __len__(self) -> int:
         return len(self.path)
+
+    def __repr__(self) -> str:
+        return f"PathExplorer({self.path}, {self.visitations})"
