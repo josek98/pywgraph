@@ -3,8 +3,7 @@ from warnings import warn  # type: ignore
 from ..groups import Group, real_multiplicative_group
 from ..exceptions import NodeNotFound, NodeAlreadyExists, EdgeAlreadyExists, EdgeNotFound  # type: ignore
 from ._edge import WeightedDirectedEdge  # type: ignore
-from ._cycles import Cycle
-from ._paths import PathExplorer
+from ._paths import PathExplorer, Path, Cycle  # type: ignore
 
 
 def _check_nodes_in_edges(
@@ -60,7 +59,7 @@ class WeightedDirectedGraph:
     @property
     def cycles(self) -> set[Cycle]:
         """Returns all cycles in the graph."""
-        return set.union(*[self.get_node_cycles(node) for node in self.nodes])
+        return set.union(*[set(self.get_node_cycles(node)) for node in self.nodes])
 
     @property
     def is_conmutative(self) -> bool:
@@ -77,10 +76,6 @@ class WeightedDirectedGraph:
     # region Node methods
     def check_definition(self) -> bool:
         """Checks if the graph is defined correctly."""
-        warn(
-            "This method is deprecated and will be removed. Instead, use the property 'is_well_defined'.",
-            Warning,
-        )
         return _check_nodes_in_edges(self.nodes, self.edges)
 
     def children(self, node: str) -> set[str]:
@@ -229,27 +224,41 @@ class WeightedDirectedGraph:
         )
 
     # region Paths methods
-    def find_path(self, start: str, end: str) -> list[str]:
-        """Finds a path between two nodes."""
-        uknown_nodes = {start, end} - self.nodes
-        if uknown_nodes:
-            raise NodeNotFound(uknown_nodes)
-        return self._find_path(start, end)
+    def find_paths(
+        self,
+        start: str,
+        end: str,
+        general_max_visitations: int = 1,
+        specific_max_visitations: dict[str, int] = {},
+        max_iter: int = 1_000,
+    ) -> list[Path]:
+        
+        bad_nodes = {start, end} - self._nodes
+        if bad_nodes:
+            raise NodeNotFound(bad_nodes)
+        
+        found_paths = self._find_paths(
+            start, end, general_max_visitations, specific_max_visitations, max_iter
+        )
+        return found_paths
+    
+    def find_path(
+        self,
+        start: str,
+        end: str
+    ) -> Path: 
+        return self.find_paths(start=start, end=end)[0]
 
-    def get_node_cycles(self, node: str) -> set[Cycle]:
+    def get_node_cycles(self, node: str) -> list[Cycle]:
         """Returns a list of Cycle objects containing all the simple cycles that contain the given node."""
         return self._find_cycles(node)
 
     def path_weight(
-        self, path: list[str] | Cycle, default_value: "Group.element" = None
+        self, path: Path, default_value: "Group.element" = None
     ) -> "Group.element":
         """Returns the weight of following the given path in the graph"""
 
-        if isinstance(path, Cycle):
-            path_copy = path.cycle.copy()
-            path_copy.append(path_copy[0])
-        else:
-            path_copy = path.copy()
+        path_copy = path.copy()
 
         if not path_copy:
             return default_value
@@ -276,7 +285,7 @@ class WeightedDirectedGraph:
         self, start: str, end: str, default: "Group.element" = None
     ) -> "Group.element":
         """Returns the weight of the shortest path between two nodes."""
-        path = self.find_path(start, end)
+        path = self.find_paths(start, end)[0]
         return self.path_weight(path, default)
 
     # region Classmethods
@@ -312,72 +321,82 @@ class WeightedDirectedGraph:
         return len(self._nodes)
 
     # region Auxiliary methods
-    def _iterate_aux(
-        self, search_path: list[str], visited_nodes: set, end: str
-    ) -> tuple[list[list[str]], set[str]]:
-        """Auxiliary function to iterate through the graph."""
-        current_node = search_path[-1]
-        if current_node == end:
-            return [[]], visited_nodes
+    def _iter_aux(
+        self,
+        explorer: PathExplorer,
+        target: str,
+        general_max_visitations: int,
+        specific_max_visitations: dict[str, int],
+    ) -> tuple[list[Path], list[PathExplorer]]:
 
-        children = self.children(current_node)
-        new_paths = [
-            search_path + [child] for child in children if child not in visited_nodes
-        ]
-        visited_nodes.update(children)
-        return new_paths, visited_nodes
-
-    def _find_path(self, start: str, end: str) -> list[str]:
-        """Finds the shortest path between two nodes in a graph."""
-        all_paths = [[start]]
-        visited_nodes = {start}
-        while (end not in visited_nodes) and (len(all_paths) != 0):
-            search_path = all_paths.pop(0)
-            new_paths, visited_nodes = self._iterate_aux(
-                search_path, visited_nodes, end
-            )
-            all_paths.extend(new_paths)
-
-        if all_paths:
-            return [path for path in all_paths if path[-1] == end][0]
-
-        return []
-
-    def _cycle_aux(
-        self, explorer: PathExplorer, target: str
-    ) -> tuple[set, str] | tuple[Cycle, str]:
         current_node = explorer.path[-1]
+        visitations = explorer.visitations.copy()
+        visitations[current_node] = visitations.get(current_node, 0) + 1
+        current_node_vistiations = visitations[current_node]
+        current_node_max_vistiations = specific_max_visitations.get(
+            current_node, general_max_visitations
+        )
+        found_path: list[Path] = []
+        new_explorers: list[PathExplorer] = []
+
+        if current_node_vistiations > current_node_max_vistiations:
+            return found_path, new_explorers
+
         if current_node == target:
-            return Cycle(explorer.path[:-1]), "cycle"
+            found_path = [explorer.path]
 
         children = self.children(current_node)
-        unexplored_nodes = children - explorer.visited
+        forbidden_nodes = {
+            node
+            for node, rep in visitations.items()
+            if rep >= specific_max_visitations.get(node, general_max_visitations)
+        }
+        unexplored_nodes = children - forbidden_nodes
         if not unexplored_nodes:
-            return set(), "dead explorer"
+            return found_path, new_explorers
 
-        updated_visited = explorer.visited | {current_node}
-        new_explorers = {
-            PathExplorer(explorer.path + [node], updated_visited)
+        new_explorers = [
+            PathExplorer(Path(explorer.path + [node]), visitations)
             for node in unexplored_nodes
-        }
-        return new_explorers, "continue"
+        ]
+        return found_path, new_explorers
 
-    def _find_cycles(self, start: str) -> set[Cycle]:
-        first_children = self.children(start)
-        if not first_children:
-            return set()
+    def _find_paths(
+        self,
+        start: str,
+        end: str,
+        general_max_visitations: int = 1,
+        specific_max_visitations: dict[str, int] = {},
+        max_iter: int = 1_000,
+    ) -> list[Path]:
 
-        explorers: set[PathExplorer] = {
-            PathExplorer([start, child]) for child in first_children
-        }
-        cycles: set[Cycle] = set()
+        explorers: list[PathExplorer] = [PathExplorer(Path([start]))]
+        all_paths: list[Path] = []
 
-        while explorers:
-            result, state = self._cycle_aux(explorers.pop(), start)
-            if state == "cycle":
-                cycles.add(result)  # type: ignore
-            elif state == "continue":
-                new_explorers = result - explorers  # type: ignore
-                explorers.update(new_explorers)
+        it = 1
+        while explorers and it < max_iter:
+            discovered_path, discovered_explorers = self._iter_aux(
+                explorers.pop(0),
+                end,
+                general_max_visitations,
+                specific_max_visitations,
+            )
+            all_paths.extend(discovered_path)
+            new_explorers = list(set(discovered_explorers) - set(explorers))
+            explorers.extend(new_explorers)
 
-        return cycles
+            it += 1
+
+        if it == max_iter:
+            warn(f"Max iterations reached ({max_iter})", Warning)
+
+        return all_paths
+    
+    def _find_cycles(self, node: str) -> list[Cycle]:
+        list_cycles = self._find_paths(
+            start=node, 
+            end=node, 
+            general_max_visitations=1,
+            specific_max_visitations={node: 2}
+        )
+        return [Cycle.from_path(cycle) for cycle in list_cycles]
