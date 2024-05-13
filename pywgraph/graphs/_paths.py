@@ -24,6 +24,7 @@ class Path(list[str]):
         if any(path[i] == path[i + 1] for i in range(len(path) - 1)):
             raise ValueError("A path can not contain equal consecutive elements")
         super().__init__(path)
+        self._path = path
 
     @property
     def is_cycle(self) -> bool:
@@ -37,6 +38,9 @@ class Path(list[str]):
             tuple(self)
         )  # Mypy don't allow to override hash for list since lists are not hashable
 
+    def __bool__(self) -> bool:
+        return True
+
 
 class Cycle(Path):
 
@@ -44,7 +48,11 @@ class Cycle(Path):
         if cycle[0] != cycle[-1]:
             raise ValueError("A cycle must start and end with the same element")
         super().__init__(cycle)
-        self._clean_cycle = cycle[:-1]
+
+        if len(cycle) == 1:
+            self._clean_cycle = cycle
+        else:
+            self._clean_cycle = cycle[:-1]
 
     @cached_property
     def canonic_representation(self) -> list[str]:
@@ -57,7 +65,7 @@ class Cycle(Path):
     @classmethod
     def from_path(cls, path: Path) -> "Cycle":
         if path.is_cycle:
-            return cls(path)
+            return cls(path._path)
         else:
             raise ValueError("The path is not a cycle")
 
