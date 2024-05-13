@@ -4,7 +4,7 @@ from ..groups import Group, real_multiplicative_group
 from ..exceptions import NodeNotFound, NodeAlreadyExists, EdgeAlreadyExists, EdgeNotFound  # type: ignore
 from ._edge import WeightedDirectedEdge  # type: ignore
 from ._cycles import Cycle
-from ._path_explorer import PathExplorer
+from ._paths import PathExplorer
 
 
 def _check_nodes_in_edges(
