@@ -30,8 +30,8 @@ class Path(list[str]):
     def is_cycle(self) -> bool:
         return self[0] == self[-1]
 
-    def __len__(self) -> int:
-        return super().__len__() - 1
+    # def __len__(self) -> int:
+    #     return super().__len__() - 1
 
     def __hash__(self) -> int:  # type: ignore
         return hash(
