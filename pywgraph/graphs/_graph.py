@@ -266,9 +266,9 @@ class WeightedDirectedGraph:
             return found_paths[0]
         return []
 
-    def get_node_cycles(self, node: str) -> list[Cycle]:
+    def get_node_cycles(self, node: str, max_cycles: int | None = None) -> list[Cycle]:
         """Returns a list of Cycle objects containing all the simple cycles that contain the given node."""
-        return self._find_cycles(node)
+        return self._find_cycles(node, max_cycles)
 
     def path_weight(
         self, path: Path | list, default_value: "Group.element" = None
@@ -413,11 +413,12 @@ class WeightedDirectedGraph:
 
         return all_paths
 
-    def _find_cycles(self, node: str) -> list[Cycle]:
+    def _find_cycles(self, node: str, max_cycles: int | None) -> list[Cycle]:
         list_cycles = self._find_paths(
             start=node,
             end=node,
             general_max_visitations=1,
             specific_max_visitations={node: 2},
+            n_return_paths=max_cycles,
         )
         return [Cycle.from_path(cycle) for cycle in list_cycles]
