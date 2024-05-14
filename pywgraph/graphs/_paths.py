@@ -24,7 +24,6 @@ class Path(list[str]):
         if any(path[i] == path[i + 1] for i in range(len(path) - 1)):
             raise ValueError("A path can not contain equal consecutive elements")
         super().__init__(path)
-        self._path = path
 
     @property
     def is_cycle(self) -> bool:
@@ -65,7 +64,7 @@ class Cycle(Path):
     @classmethod
     def from_path(cls, path: Path) -> "Cycle":
         if path.is_cycle:
-            return cls(path._path)
+            return cls(path)
         else:
             raise ValueError("The path is not a cycle")
 

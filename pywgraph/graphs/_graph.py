@@ -280,7 +280,6 @@ class WeightedDirectedGraph:
         if not path_copy:
             return default_value
 
-        print(len(path_copy))
         if len(path_copy) == 1:
             return self.group.identity
 
