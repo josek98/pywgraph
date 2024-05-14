@@ -1,7 +1,9 @@
 from functools import reduce  # type: ignore
+from numpy import inf
 from warnings import warn  # type: ignore
 from ..groups import Group, real_multiplicative_group
 from ..exceptions import NodeNotFound, NodeAlreadyExists, EdgeAlreadyExists, EdgeNotFound  # type: ignore
+from .._wrappers import deprecation_warning, behavior_change_warning  # type: ignore
 from ._edge import WeightedDirectedEdge  # type: ignore
 from ._paths import PathExplorer, Path, Cycle  # type: ignore
 
@@ -74,6 +76,9 @@ class WeightedDirectedGraph:
         return check
 
     # region Node methods
+    @deprecation_warning(
+        f"This is method is deprecated and will be removed in the future. Use the property 'is_well_defined' instead."
+    )
     def check_definition(self) -> bool:
         """Checks if the graph is defined correctly."""
         return _check_nodes_in_edges(self.nodes, self.edges)
@@ -160,6 +165,10 @@ class WeightedDirectedGraph:
             raise EdgeAlreadyExists(start, end)
 
         if weight is None:  # Find weight in another way
+            warn(
+                "The behaviour of trying to find a path when no weight or path is given is deprecated and will be removed."
+                + "Instead, either specify weight or find first a path between edges with the 'find_paths' method."
+            )
             if allow_inverse:
                 search_graph = self.add_reverse_edges(inplace=False)
             else:
@@ -231,6 +240,7 @@ class WeightedDirectedGraph:
         general_max_visitations: int = 1,
         specific_max_visitations: dict[str, int] = {},
         max_iter: int = 1_000,
+        n_return_paths: int | None = None,
     ) -> list[Path]:
 
         bad_nodes = {start, end} - self._nodes
@@ -238,10 +248,18 @@ class WeightedDirectedGraph:
             raise NodeNotFound(bad_nodes)
 
         found_paths = self._find_paths(
-            start, end, general_max_visitations, specific_max_visitations, max_iter
+            start,
+            end,
+            general_max_visitations,
+            specific_max_visitations,
+            max_iter,
+            n_return_paths,
         )
         return found_paths
 
+    @deprecation_warning(
+        "This method is deprecated and will be removed. Use 'find_paths' instead limiting the number of return paths to 1."
+    )
     def find_path(self, start: str, end: str) -> Path | list:
         found_paths = self.find_paths(start=start, end=end)
         if found_paths:
@@ -367,13 +385,17 @@ class WeightedDirectedGraph:
         general_max_visitations: int = 1,
         specific_max_visitations: dict[str, int] = {},
         max_iter: int = 1_000,
+        n_return_paths: int | None = None,
     ) -> list[Path]:
-
+        if n_return_paths is None:
+            max_paths: int | float = inf
+        else:
+            max_paths = n_return_paths
         explorers: list[PathExplorer] = [PathExplorer(Path([start]))]
         all_paths: list[Path] = []
 
         it = 1
-        while explorers and it < max_iter:
+        while explorers and (it < max_iter) and (len(all_paths) < max_paths):
             discovered_path, discovered_explorers = self._iter_aux(
                 explorers.pop(0),
                 end,
