@@ -235,6 +235,7 @@ class TestWeightedDirectedGraph:
         update_dict["C"] = update_dict["C"] | {"B": (1/9) * 7}
         assert WeightedDirectedGraph.from_dict(update_dict) == new_graph
 
+    @pytest.mark.deprecated
     def test_add_edge_find_path(self): 
         graph_copy = graph()
         new_graph = graph_copy.add_edge(start="C", end="A", inplace=False, allow_inverse=True)
@@ -242,6 +243,7 @@ class TestWeightedDirectedGraph:
         update_dict["C"] = update_dict["C"] | {"A": 1/9}
         assert WeightedDirectedGraph.from_dict(update_dict) == new_graph
 
+    @pytest.mark.deprecated
     def test_add_edge_find_non_existing_path(self): 
         graph_copy = graph()
         assert graph_copy == graph_copy.add_edge(start="C", end="A", inplace=False, allow_inverse=False)

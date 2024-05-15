@@ -166,10 +166,6 @@ class WeightedDirectedGraph:
             raise EdgeAlreadyExists(start, end)
 
         if weight is None:  # Find weight in another way
-            warn(
-                "The behaviour of trying to find a path when no weight or path is given is deprecated and will be removed."
-                + "Instead, either specify weight or find first a path between edges with the 'find_paths' method."
-            )
             if allow_inverse:
                 search_graph = self.add_reverse_edges(inplace=False)
             else:
@@ -178,6 +174,11 @@ class WeightedDirectedGraph:
             if path is not None:  # Apply weight of the given path
                 weight = search_graph.path_weight(path)
             else:  # Find path to get a weight
+                warn(
+                    "The behaviour of trying to find a path when no weight or path is given is deprecated and will be removed."
+                    + "Instead, either specify weight or find first a path between edges with the 'find_paths' method.",
+                    DeprecationWarning,
+                )
                 path = search_graph.find_path(start, end)
                 if not path:
                     print(f"Unable to find a weight to connect edge {start} -> {end}")
@@ -253,15 +254,15 @@ class WeightedDirectedGraph:
         end : str
             The end node.
         general_max_visitations : int, optional
-            A positive integer that controls the maximum number that a node can be visited 
+            A positive integer that controls the maximum number that a node can be visited
             throughout the search. The default is 1.
         specific_max_visitations : dict[str, int], optional
-            A dictionary of node names and their maximum number of visits that the node can 
+            A dictionary of node names and their maximum number of visits that the node can
             be visited throughout the search. This overwrites the general_max_visitations parameter
             for the specify nodes. The default is {}.
         max_iter : int, optional
             A positive integer that controls the maximum number of iterations that the searching algorithm
-            can perform. If the algorithm reach this number, a warning will be raised. The default is 1_000. 
+            can perform. If the algorithm reach this number, a warning will be raised. The default is 1_000.
         max_paths : int, optional
             A positive integer that controls the maximum number of paths that the searching algorithm
             will look for. The default is None, which means that the algorithm will look for all the paths.
@@ -273,18 +274,18 @@ class WeightedDirectedGraph:
 
         More information about the method
         ---------------------------------
-            The most basic way of using this method is just passing the start and end nodes. In this situation, 
-            the algorithm will look for all the paths between the start and end nodes not allowing node repetition. 
+            The most basic way of using this method is just passing the start and end nodes. In this situation,
+            the algorithm will look for all the paths between the start and end nodes not allowing node repetition.
             This means that if start and end nodes are the same (you are looking for a cycle), the algorithm will return an empty list
             because it will need to visit the same node twice.
 
             If you want to look for cycles that contains node 'A', start and end node should be set to 'A'
-            and the `specific_max_visitations` parameter should be at least `{'A': 2}`, so the algorithm 
+            and the `specific_max_visitations` parameter should be at least `{'A': 2}`, so the algorithm
             is allowed to visit node 'A' twice.
 
             Given a graph that connect nodes 'A' and 'B' in both directions and 'B' and 'C' also
             in both directions. We have the following examples:
-            
+
             Example 1: `start = 'A', end = 'B', general_max_visitations = 2`
                 In this scenario the return paths will be `['A','B'], ['A','B','A','B], ['A','B','C','B']`.
             Example 2: `start = 'A', end = 'A', general_max_visitations = 2`
@@ -323,9 +324,9 @@ class WeightedDirectedGraph:
     def path_weight(
         self, path: Path | list, default_value: "Group.element" = None
     ) -> "Group.element":
-        """Returns the weight of traversing the given path in the graph. If the given 
+        """Returns the weight of traversing the given path in the graph. If the given
         path is an empty a list, a default value can be set.
-        
+
         Parameters
         ----------
         path : Path | list
@@ -356,7 +357,9 @@ class WeightedDirectedGraph:
         )
         return result_weight
 
-    @deprecation_warning("This method is deprecated and will be removed. Use 'path_weight' instead.")
+    @deprecation_warning(
+        "This method is deprecated and will be removed. Use 'path_weight' instead."
+    )
     def weight_between(
         self, start: str, end: str, default: "Group.element" = None
     ) -> "Group.element":
