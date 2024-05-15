@@ -1,10 +1,7 @@
 from typing import TypeVar
-from ..groups import Group
+from ..groups import Group, real_multiplicative_group
 
 T = TypeVar("T")
-_default_group = Group(
-    "Real numbers with multiplication", 1.0, lambda x, y: x * y, lambda x: 1 / x
-)
 
 
 class DirectedEdge:
@@ -46,9 +43,14 @@ class DirectedEdge:
 class WeightedDirectedEdge(DirectedEdge):
 
     def __init__(
-        self, start: str, end: str, weight: T, group: Group = _default_group
+        self,
+        start: str,
+        end: str,
+        weight: T,
+        group: Group = real_multiplicative_group,
     ) -> None:
         super().__init__(start, end)
+
         self._weight = weight
         self._group = group
 

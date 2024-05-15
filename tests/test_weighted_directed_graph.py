@@ -38,14 +38,27 @@ class TestWeightedDirectedGraph:
             WeightedDirectedEdge("B", "C", 10),
         }
 
+    @pytest.mark.deprecated
     def test_well_defined(self):
         assert graph().check_definition()
 
+    def test_well_defined_property(self): 
+        assert graph().is_well_defined
+
+    @pytest.mark.deprecated
     def test_bad_defined(self):
         assert (
             WeightedDirectedGraph(
                 {"A"}, {WeightedDirectedEdge("A", "B", 7)}
             ).check_definition()
+            == False
+        )
+
+    def test_bad_defined_property(self):
+        assert (
+            WeightedDirectedGraph(
+                {"A"}, {WeightedDirectedEdge("A", "B", 7)}
+            ).is_well_defined
             == False
         )
 
@@ -222,6 +235,7 @@ class TestWeightedDirectedGraph:
         update_dict["C"] = update_dict["C"] | {"B": (1/9) * 7}
         assert WeightedDirectedGraph.from_dict(update_dict) == new_graph
 
+    @pytest.mark.deprecated
     def test_add_edge_find_path(self): 
         graph_copy = graph()
         new_graph = graph_copy.add_edge(start="C", end="A", inplace=False, allow_inverse=True)
@@ -229,6 +243,7 @@ class TestWeightedDirectedGraph:
         update_dict["C"] = update_dict["C"] | {"A": 1/9}
         assert WeightedDirectedGraph.from_dict(update_dict) == new_graph
 
+    @pytest.mark.deprecated
     def test_add_edge_find_non_existing_path(self): 
         graph_copy = graph()
         assert graph_copy == graph_copy.add_edge(start="C", end="A", inplace=False, allow_inverse=False)

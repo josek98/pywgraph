@@ -1,5 +1,6 @@
 from pywgraph import WeightedDirectedGraph, Group, WeightedDirectedEdge
 import numpy as np
+import pytest
 from typing import Any  # for typing purposes
 
 
@@ -78,8 +79,12 @@ class TestWeightedDirectedGraphArrays:
             ),
         }
 
+    @pytest.mark.deprecated
     def test_well_defined(self):
         assert multiplication_graph().check_definition()
+
+    def test_well_defined_property(self):
+        assert multiplication_graph().is_well_defined
 
     def test_fill_reverse_edge_multiplication(self):
         complete_dict = _array_dict_graph.copy()
@@ -111,6 +116,4 @@ class TestWeightedDirectedGraphArrays:
         filled_graph = WeightedDirectedGraph.from_dict(
             complete_dict, vector_group_addition()
         )
-        print(filled_graph)
-        print(addition_graph().add_reverse_edges())
         assert filled_graph == addition_graph().add_reverse_edges()

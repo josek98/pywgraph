@@ -1,4 +1,4 @@
-from typing import Callable, TypeVar
+from typing import Callable, TypeVar, Any
 
 
 """Since I don't find an easy way of providing a way to indicate the elements of the 
@@ -18,6 +18,7 @@ class Group:
         operation: Callable[[T, T], T],
         inverse_function: Callable[[T], T],
         hash_function: Callable[[T], int] = hash,
+        group_checker: Callable[[Any], bool] | None = None,
     ) -> None:
         """Abstraction of a mathematical group.
 
@@ -34,6 +35,8 @@ class Group:
         hash_function : Callable[[T], int], optional
             Function that returns the hash of an element, by default hash. Mandatory
             if elements of the group are not hashable.
+        group_checker : Callable[[Any], bool], optional
+            Function that checks if an element is in the group, by default None.
 
         Examples
         --------
@@ -50,6 +53,7 @@ class Group:
         self._operation = operation
         self._inverse_function = inverse_function
         self._hash_function = hash_function
+        self._group_checker = group_checker
 
     @property
     def name(self) -> str:
@@ -77,6 +81,11 @@ class Group:
     def equal(self, a: T, b: T) -> bool:
         return self._hash_function(a) == self._hash_function(b)
 
+    def check(self, element: Any) -> bool:
+        if self._group_checker is None:
+            raise ValueError("Group checker not defined")
+        return self._group_checker(element)
+
     def __call__(self, a: T, b: T) -> T:
         return self.operation(a, b)
 
@@ -95,13 +104,24 @@ if __name__ == "__main__":
 
     import numpy as np
 
+    def is_r3_element(element: Any) -> bool:
+        if not isinstance(element, np.ndarray):
+            return False
+        if element.shape != (3,):
+            return False
+        return True
+
     reals_3 = Group(
         "R^3 space",
         np.zeros(3),
         lambda x, y: x + y,
         lambda x: -x,
         lambda x: hash(tuple(x)),
+        is_r3_element,
     )
     print(reals_3(np.array([1, 2, 3]), np.array([4, 5, 6])))
     print(reals_3.inverse(np.array([1, 1, 1])))
     print(reals_3.equal(np.array([1, 2, 3]), np.array([1.0, 2, 3])))
+    print(reals_3.check(np.array([1, 2, 3])))
+    print(reals_3.check(np.array([1, 3])))
+    print(reals_3.check([1, 3, 3]))
