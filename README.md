@@ -6,11 +6,13 @@ For this reason, this package also includes a basic abstraction of a group. The 
 
 * The a function of two variables that return one element (the binary operation of the group).
 
-* The inverse function of an element. This is, the function that given an element of the group returns it inverse.
+* The inverse function of an element. This is, the function that given an element of the group returns its inverse.
 
 * The identity element of the group.
 
 * Optional, a hash function for the elements of the group. By default it is taken the standard python hash function. If your group contains not hashable elements you should provide one.
+
+* [New in `1.1.0`] Optional, a check function to check if an element belongs to the group.
 
 ## QUICKSTART
 
@@ -77,7 +79,7 @@ graph.children("B")
 # {"A", "C"}
 ```
 
-The main use of this graph object is to work with their weights as group elements, so you should not add the reverse edge of an existing edge with a bad inverse weight. For this, there is the method `add_reverse_edges` that returns a new graph with the original graph with all the reverse edges added. You can also modify the graph directly with the paremeter `inplace=True`.
+The main use of this graph object is to work with their weights as group elements, so normally, you want that reverse edges of existing ones have the inverse weight of the existing edge weight. For this, there is the method `add_reverse_edges` that returns a new graph with the original graph with all the reverse edges added. You can also modify the graph directly with the paremeter `inplace=True`.
 
 ```python
 graph_w_inverse_edges = graph.add_reverse_edges()
@@ -88,37 +90,53 @@ graph.add_reverse_edges(inplace=True)
 
 ### Path finding
 
-There is a method `find_path` that finds one of the shortest path between two nodes. This method returns a list of edges that represents the path. The method has two parameters: `start` and `end`. Both must be nodes of the graph. If not, an error is raised. If there is not path between the given nodes the empty list will be return.
+There is a method `find_paths` that finds all paths between two gven nodes. This method have many options to modify the behaviour of the search. Its parameters are:
+
+* `start`: The node of the graph where the algorithm starts the search.
+* `end`: The target node of the graph to reach.
+* `general_max_visitations`: A non negative integer that specifies the maximum number of times that nodes can be visited along the path. By default is set to one.
+* `specific_max_visitations`: A dictionary whose keys are nodes and values are non negative integers. This specifies the maximum number of times that the key node can be visited along the path, overriding what is set in the `genera_max_visitations` parameter. By default is set to the empty dictionary. You can use this parameter to find paths that avoid one node by setting `genera_max_visitations={"AvoidNode":0}`. You can also use it to find cycles by setting the same starting and ending node and allowing to visit it two times. There is an specific method to find cycles.
+* `max_iter`: A non negative integer that limits the number of iterations of the search algorithm. The algorithm should always finish, but for large and complex paths it can take a lot of iterations. You can use this parameter to limit the amount of iterations to perform. By default is set to the factorial of the number of nodes in the graph. A warning will be raised if the maximum number of iterations is reached.
+* `max_paths`: A non negative integer that limits the number of paths that the method will return. By default is set to infinity, so it will return all the possible paths. If you are interested in finding only one path you can set this parameter to one and the algorithm will finish after finding it.
+
+The result of this method will be a list of `Paths` objects, which is just a direct subclass of `list[str]` that is used to represent a path. If no path was found the result will be an empty list.
 
 ```python
 dictionary = {
-    "A": {"B": 1.0, "C": 2.5},
-    "B": {"C": 2.5},
-    "C": {"A": 1 / 2.5, "D": 1.3},
-    "D": {"E": 3.4},
-    "E": {"C": 1 / (1.3 * 3.4), "A": 13.0},
+    "A": {"B": 1},
+    "B": {"C": 2.5, "A": 1},
+    "C": {},
     "Z": {},
 }
 graph = WeightedDirectedGraph.from_dict(dictionary)
 
-graph.find_path("A", "B")
-# ["A", "B]
+graph.find_paths("A", "B")
+# [["A", "B]]
 
-graph.find_path("A", "Z")
+graph.find_paths("A", "Z")
 # []
 
-graph.find_path("A", "E")
-# ["A", "C", "D", "E"]
+graph.find_paths("A", "C")
+# [["A", "B", "C"]]
 
-graph.find_path("A", "A")
-# ["A"]
+graph.find_paths("A", "A")
+# [["A"]]
+
+graph.find_paths("A", "A", general_max_visitations=2)
+# [['A'], ['A','B','A'], ['A','B','C','B','A']]
+
+graph.find_paths("A", "B", general_max_visitations=2)
+# [['A','B'], ['A','B','A','B], ['A','B','C','B']]
+
+graph.find_paths("A", "B", specific_max_visitations={"B":2})
+# [['A','B'], ['A','B','C','B']
 ```
 
-There are also methods to get the weight of following a path. This methods are `path_weight` and `weight_between`. The first one receives a path (a list of consecutive nodes) and returns the weight of the path (the product of the weights). If the given path does not exists an exception will be raised. If the empty path is given the return weight will be `0`. The second method receives the start and end nodes and returns the weight of one of the shortest paths between them. If there is not path between the given nodes the return weight will be `0`. The weight between a node an itself will be `1`.
+There is also a method to get the weight of following a path. This method is call `path_weight`. It receives a `Path` object or `list[str]` and returns the weight of the path (the product of the weights). You can set a default value (like the python `dict.get`) that will be return if the path is empty. By default it is set to `None`. If the given path does not exists an exception will be raised. If the given path consists of just one node, the identity element of the group (1.0 for standard graphs) will be return.
 
 ```python
-graph.path_weight([])
-# 0.0
+graph.path_weight([], "Helo World")
+# "Helo World"
 
 graph.path_weight(["A", "B"])
 # 1.0
@@ -126,17 +144,9 @@ graph.path_weight(["A", "B"])
 graph.path_weight(["A", "B", "C"])
 # 2.5
 
-grap.weight_between("A", "C")
-# 2.5
-
-grap.weight_between("A", "Z")
-# 0.0
-
-grap.weight_between("A", "A")
+graph.path_weight(["Z"])
 # 1.0
 ```
-
-**WARNING**: Currently, if a path that contains a cycle is given the method `path_weight` will raise an error. In future this behaviour will be change to allow cycles.
 
 ### Graphs and groups
 
@@ -145,6 +155,7 @@ grap.weight_between("A", "A")
 As said in the introduction, there is also an abstraction of a mathematical group. This object is call simply `Group`. To initialize it you need to provide a description of the group (string), the binary operation, the inverse operation and the identity element. If the elements of the group are not hashable, you should provide a hash function. One example could be an implementation of $\mathbb{R^2}$ under addition. For this we could represent vectors with numpy arrays, which are not hashable. We can construct this group as follows.
 
 ```python
+import numpy as np
 from pywgraph import Group
 
 group = Group(
@@ -156,7 +167,21 @@ group = Group(
 )
 ```
 
-This group instance is callable. The call gets two variables as inputs and return the operation between them. Since there is no type checking, the user is responsible of using it with valid inputs. You can also call the group operation with the property `Group.operation` and the inverse operation by `Group.inverse_function`. The identity element is stored in the property `Group.identity`. If you need to, you can also get back the hash function with the property `Group.hash_function`.
+You can also provide a check function that checks if an object belongs to the group. In the above case, a checker function could be defined by:
+
+```python
+def r_2_check(weight: Any) -> bool:
+    if not isinstance(weight, np.ndarray): 
+        return False
+    if len(weight) != 2:
+        return False
+    if not all(isinstance(x, (int, float)) for x in weight):
+        return False
+    return True
+```
+
+This group instance is callable. The call gets two variables as inputs and return the operation between them. Since there is no type checking, the user is responsible of using it with valid inputs. You can also call the group operation with the property `Group.operation` and the inverse operation by `Group.inverse_function`. The identity element is stored in the property `Group.identity`. If you need to, you can also get back the hash function with the property `Group.hash_function`. If provided a check function, you can check if an object belongs to the group with the method `Group.check`.
+
 
 ```python
 import numpy as np 
@@ -172,8 +197,14 @@ group.operation(vector_1, vector_2)
 group.inverse(vector_1)
 # np.array([-1, -3])
 
-group.neutral_element
+group.identity
 # np.array([0, 0])
+
+group.check(vector_1)
+# True
+
+group.check(23)
+# False
 ```
 
 #### General weights for edges
@@ -264,3 +295,7 @@ Notice that this graph is not conmutative since the weight of the path `["A", "C
 
 * Added a method to `WeightedDirectedGraph` to remove a node.
 * Added a method to `WeightedDirectedGraph` to remove an edge.
+
+### Version 1.1.0 (2024-05-15)
+
+* The `Group` class now has a `group_checker` optional parameter that consists of a function to check wether an element belongs to the group or not.

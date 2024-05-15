@@ -17,10 +17,6 @@ def list_invalid_path() -> list[str]:
 
 class TestPathsAndCycles:
 
-    def test_empty_path(self):
-        with pytest.raises(ValueError):
-            Path([])
-
     def test_invalid_path(self):
         with pytest.raises(ValueError):
             Path(list_invalid_path())

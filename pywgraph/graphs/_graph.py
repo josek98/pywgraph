@@ -1,5 +1,6 @@
 from functools import reduce  # type: ignore
 from numpy import inf
+from math import factorial
 from warnings import warn  # type: ignore
 from ..groups import Group, real_multiplicative_group
 from ..exceptions import NodeNotFound, NodeAlreadyExists, EdgeAlreadyExists, EdgeNotFound  # type: ignore
@@ -242,7 +243,7 @@ class WeightedDirectedGraph:
         end: str,
         general_max_visitations: int = 1,
         specific_max_visitations: dict[str, int] = {},
-        max_iter: int = 1_000,
+        max_iter: int | None = None,
         max_paths: int | None = None,
     ) -> list[Path]:
         """Finds all the paths between two nodes in the graph.
@@ -262,7 +263,8 @@ class WeightedDirectedGraph:
             for the specify nodes. The default is {}.
         max_iter : int, optional
             A positive integer that controls the maximum number of iterations that the searching algorithm
-            can perform. If the algorithm reach this number, a warning will be raised. The default is 1_000.
+            can perform. If the algorithm reach this number, a warning will be raised. The default is 
+            the factorial of the number of nodes of the graph.
         max_paths : int, optional
             A positive integer that controls the maximum number of paths that the searching algorithm
             will look for. The default is None, which means that the algorithm will look for all the paths.
@@ -293,6 +295,8 @@ class WeightedDirectedGraph:
                 Notice that the null cycle that runs through 'A' is return as `['A']`.
         """
 
+        if max_iter is None: 
+            max_iter = factorial(len(self))
         bad_nodes = {start, end} - self._nodes
         if bad_nodes:
             raise NodeNotFound(bad_nodes)
@@ -346,13 +350,14 @@ class WeightedDirectedGraph:
         uknown_nodes = set(path_copy) - self.nodes
         if uknown_nodes:
             raise NodeNotFound(uknown_nodes)
+        
         path_pairs = list(zip(path_copy, path_copy[1:]))
+        if not all(node_f in self.parents(node_c) for node_f, node_c in path_pairs):
+            raise ValueError("The given path is not a valid path in the graph.")
+        
         path_edges_weights = [
             edge._weight for edge in self.edges if (edge.start, edge.end) in path_pairs
         ]
-        if len(path_pairs) != len(path_edges_weights):
-            raise ValueError(f"The path {path_copy} is not a valid path in the graph")
-
         result_weight = reduce(
             self.group.operation, path_edges_weights, self.group.identity  # type: ignore
         )

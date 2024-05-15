@@ -19,8 +19,6 @@ class Path(list[str]):
     """Class that represents a path."""
 
     def __init__(self, path: list[str]) -> None:
-        if not path:
-            raise ValueError("A path can not be empty")
         if any(path[i] == path[i + 1] for i in range(len(path) - 1)):
             raise ValueError("A path can not contain equal consecutive elements")
         super().__init__(path)
