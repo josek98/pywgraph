@@ -289,7 +289,8 @@ class WeightedDirectedGraph:
             Example 1: `start = 'A', end = 'B', general_max_visitations = 2`
                 In this scenario the return paths will be `['A','B'], ['A','B','A','B], ['A','B','C','B']`.
             Example 2: `start = 'A', end = 'A', general_max_visitations = 2`
-                In this scenario the return paths will be `['A','B','A'], ['A','B','C','B','A']`.
+                In this scenario the return paths will be `['A'], ['A','B','A'], ['A','B','C','B','A']`.
+                Notice that the null cycle that runs through 'A' is return as `['A']`.
         """
 
         bad_nodes = {start, end} - self._nodes
