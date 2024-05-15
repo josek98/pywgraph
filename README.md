@@ -287,11 +287,11 @@ Notice that this graph is not conmutative since the weight of the path `["A", "C
 
 * The `Group` class now has a `group_checker` optional parameter that consists of a function to check wether an element belongs to the group or not.
 
-* Add the method `WeightedDirectedGraph.find_paths` to find all paths between two given nodes. 
+* Add the method `WeightedDirectedGraph.find_paths` to find all paths between two given nodes.
 * The method `WeightedDirectedGraph.find_path` is deprecated and will be removed, use `find_paths` with `max_paths=1` to replicate `WeightedDirectedGraph.find_path` behaviour.
-* Add `Path` and `Cycle` classes to represent an abstraction of a node path and a node cycle. 
-* Add method `WeightedDirectedGraph.get_node_cycles` to find all cycles that contains the node. 
-* Add property `WeightedDirectedGraph.cycles` that returns the set of all simple cycles of the graph. 
-* Add the property `WeightedDirectedGraph.is_conmutative` that checks it the graph is conmutative. 
+* Add `Path` and `Cycle` classes to represent an abstraction of a node path and a node cycle.
+* Add method `WeightedDirectedGraph.get_node_cycles` to find all cycles that contains the node.
+* Add property `WeightedDirectedGraph.cycles` that returns the set of all simple cycles of the graph.
+* Add the property `WeightedDirectedGraph.is_conmutative` that checks it the graph is conmutative.
 * The method `WeightedDirectedGraph.weight_between` is deprecated and will be removed. Combine `WeightedDirectedGraph.find_paths` with `WeightedDirectedGraph.path_weight` to replicate `WeightedDirectedGraph.weight_between` behaviour.
-* The behaviour of `WeightedDirectedGraph.add_edge` when no weight and path is given is deprecated and will be removed. Either give a weight or seach for a path. 
+* The behaviour of `WeightedDirectedGraph.add_edge` when no weight and path is given is deprecated and will be removed. Either give a weight or seach for a path.
