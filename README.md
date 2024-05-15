@@ -182,7 +182,6 @@ def r_2_check(weight: Any) -> bool:
 
 This group instance is callable. The call gets two variables as inputs and return the operation between them. Since there is no type checking, the user is responsible of using it with valid inputs. You can also call the group operation with the property `Group.operation` and the inverse operation by `Group.inverse_function`. The identity element is stored in the property `Group.identity`. If you need to, you can also get back the hash function with the property `Group.hash_function`. If provided a check function, you can check if an object belongs to the group with the method `Group.check`.
 
-
 ```python
 import numpy as np 
 vector_1 = np.array([1, 3])
@@ -233,11 +232,11 @@ edge.inverse
 # WeightedDirectedEdge("B", "A", np.array([-1, -2]), group)
 ```
 
-Is important to notice that there is no checking of wether the provide weight is a valid element of the given group. In the future there will be an option to implement an element checker in the group definition.
+Is important to notice that there is no checking of wether the provide weight is a valid element of the given group.
 
 #### General weighted graphs
 
-Now for constructing a weighted directed graph whose weights are elements of a specific group you just need to define the group and create the graph adding the group as parameter. The edges of the graph need to include the group as well, as seen before. A better way to construct the graph is to use the method `WeightedDirectedGraph.from_dict`. Now this works exactly the same but adding the group as a new parameter.
+Now, for constructing a weighted directed graph whose weights are elements of a specific group you just need to define the group and create the graph adding the group as parameter. The edges of the graph need to include the group as well, as seen before. A better way to construct the graph is to use the method `WeightedDirectedGraph.from_dict`. Now this works exactly the same but adding the group as a new parameter.
 
 With this implementation any method that concerns weights uses the group operation to handle it. For example, the weight of a given path that the `WeightedDirectedGraph.path_weight` yields is obtain with the consecutive application of the group operation. The same happens with the `WeightedDirectedGraph.weight_between` method.
 
@@ -268,18 +267,6 @@ graph.path_weight(["A", "C"])
 
 graph.path_weight(["A", "B", "C"])
 # np.array([1, 2.5]) + np.array([2.5, -1]) = np.array([3.5, 1.5])
-
-graph.weight_between("A", "C")
-# np.array([-1, 3.4])
-
-graph.weight_between("A", "Z")
-# np.array([0, 0])
-
-graph.weight_between("A", "Z")
-# None
-
-graph.weight_between("A", "Z", np.array([1,1]))
-# np.array([1,1])
 ```
 
 Notice that this graph is not conmutative since the weight of the path `["A", "C"]` is different from the weight of the path `["A", "B", "C]`.
@@ -299,3 +286,12 @@ Notice that this graph is not conmutative since the weight of the path `["A", "C
 ### Version 1.1.0 (2024-05-15)
 
 * The `Group` class now has a `group_checker` optional parameter that consists of a function to check wether an element belongs to the group or not.
+
+* Add the method `WeightedDirectedGraph.find_paths` to find all paths between two given nodes. 
+* The method `WeightedDirectedGraph.find_path` is deprecated and will be removed, use `find_paths` with `max_paths=1` to replicate `WeightedDirectedGraph.find_path` behaviour.
+* Add `Path` and `Cycle` classes to represent an abstraction of a node path and a node cycle. 
+* Add method `WeightedDirectedGraph.get_node_cycles` to find all cycles that contains the node. 
+* Add property `WeightedDirectedGraph.cycles` that returns the set of all simple cycles of the graph. 
+* Add the property `WeightedDirectedGraph.is_conmutative` that checks it the graph is conmutative. 
+* The method `WeightedDirectedGraph.weight_between` is deprecated and will be removed. Combine `WeightedDirectedGraph.find_paths` with `WeightedDirectedGraph.path_weight` to replicate `WeightedDirectedGraph.weight_between` behaviour.
+* The behaviour of `WeightedDirectedGraph.add_edge` when no weight and path is given is deprecated and will be removed. Either give a weight or seach for a path. 
