@@ -116,6 +116,4 @@ class TestWeightedDirectedGraphArrays:
         filled_graph = WeightedDirectedGraph.from_dict(
             complete_dict, vector_group_addition()
         )
-        print(filled_graph)
-        print(addition_graph().add_reverse_edges())
         assert filled_graph == addition_graph().add_reverse_edges()

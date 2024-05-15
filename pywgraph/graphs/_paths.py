@@ -45,6 +45,8 @@ class Cycle(Path):
     starts with the 'smallest' node."""
 
     def __init__(self, cycle: Path | list[str]) -> None:
+        if not cycle:
+            raise ValueError("A cycle can not be empty")
         if cycle[0] != cycle[-1]:
             raise ValueError("A cycle must start and end with the same element")
         super().__init__(cycle)
