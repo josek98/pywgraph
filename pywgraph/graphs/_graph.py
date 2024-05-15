@@ -480,4 +480,4 @@ class WeightedDirectedGraph:
             specific_max_visitations={node: 2},
             max_paths=max_cycles,
         )
-        return [Cycle.from_path(cycle) for cycle in list_cycles]
+        return [Cycle(cycle) for cycle in list_cycles]

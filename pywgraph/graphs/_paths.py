@@ -16,7 +16,7 @@ def _canonic_representation(cycle: list[str]) -> list[str]:
 
 
 class Path(list[str]):
-    """Class that represents a path"""
+    """Class that represents a path."""
 
     def __init__(self, path: list[str]) -> None:
         if not path:
@@ -29,9 +29,6 @@ class Path(list[str]):
     def is_cycle(self) -> bool:
         return self[0] == self[-1]
 
-    # def __len__(self) -> int:
-    #     return super().__len__() - 1
-
     def __hash__(self) -> int:  # type: ignore
         return hash(
             tuple(self)
@@ -42,8 +39,12 @@ class Path(list[str]):
 
 
 class Cycle(Path):
+    """Class that represents a cycle. This is, a path that starts and ends with the same element.
+    Two cycles are equivalent if they follow the same nodes in the same order. The representation
+    of a cycle is given by a canonic representation, which consists of the representation that 
+    starts with the 'smallest' node."""
 
-    def __init__(self, cycle: list[str]) -> None:
+    def __init__(self, cycle: Path | list[str]) -> None:
         if cycle[0] != cycle[-1]:
             raise ValueError("A cycle must start and end with the same element")
         super().__init__(cycle)
@@ -61,26 +62,16 @@ class Cycle(Path):
     def equivalent_representations(self) -> list[list[str]]:
         return _cycle_representations(self._clean_cycle)
 
-    @classmethod
-    def from_path(cls, path: Path) -> "Cycle":
-        if path.is_cycle:
-            return cls(path)
-        else:
-            raise ValueError("The path is not a cycle")
-
     def __hash__(self) -> int:  # type: ignore
         return hash(
             tuple(self.canonic_representation)
         )  # Mypy don't allow to override hash for list since lists are not hashable
 
     def __eq__(self, other: object) -> bool:
-        other_ = other
-        if isinstance(other, Path):
-            other_ = Cycle.from_path(other)
-        if isinstance(other_, Cycle):
-            if len(other_) != len(self):
+        if isinstance(other, Cycle):
+            if len(other) != len(self):
                 return False
-            return other_.canonic_representation == self.canonic_representation
+            return other.canonic_representation == self.canonic_representation
         return False
 
     def __repr__(self) -> str:
