@@ -110,3 +110,42 @@ class PathExplorer:
 
     def __repr__(self) -> str:
         return f"PathExplorer({self.path}, {self.visitations})"
+
+
+class PathExplorerPlus:
+    """Auxiliary object to help in the searching of paths on a graph"""
+
+    def __init__(self, path: Path, weight: "Group.element", visitations: dict[str, int] = {}) -> None:
+        self._path = path
+        self._weight = weight
+        self._visitations = visitations
+
+    @property
+    def path(self) -> Path:
+        return self._path
+    
+    @property
+    def weight(self) -> "Group.element":
+        return self._weight
+
+    @property
+    def visitations(self) -> dict[str, int]:
+        return self._visitations
+
+    def __hash__(self) -> int:
+        hash_list = hash(tuple(self.path))
+        hash_dict = hash(
+            tuple(sorted(list(self.visitations.items()), key=lambda x: x[0]))
+        )
+        return hash_list ^ hash_dict
+
+    def __eq__(self, other: object) -> bool:
+        if isinstance(other, PathExplorer):
+            return (self.path, self.visitations) == (other.path, other.visitations)
+        return False
+
+    def __len__(self) -> int:
+        return len(self.path)
+
+    def __repr__(self) -> str:
+        return f"PathExplorer({self.path}, {self.visitations})"

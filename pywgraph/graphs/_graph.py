@@ -2,11 +2,14 @@ from functools import reduce  # type: ignore
 from numpy import inf
 from math import factorial
 from warnings import warn  # type: ignore
-from ..groups import Group, real_multiplicative_group
+from ..groups import Group, CommonGroups
 from ..exceptions import NodeNotFound, NodeAlreadyExists, EdgeAlreadyExists, EdgeNotFound  # type: ignore
 from .._wrappers import deprecation_warning, behavior_change_warning  # type: ignore
 from ._edge import WeightedDirectedEdge  # type: ignore
-from ._paths import PathExplorer, Path, Cycle  # type: ignore
+from ._paths import PathExplorerPlus, Path, Cycle  # type: ignore
+
+
+_real_multiplicative_group = CommonGroups.RealMultiplicative
 
 
 def _check_nodes_in_edges(
@@ -17,25 +20,13 @@ def _check_nodes_in_edges(
     return edge_nodes <= nodes
 
 
-# def _check_weights_of_edges(
-#     edges: set[WeightedDirectedEdge],
-#     group: Group,
-# ) -> set[WeightedDirectedEdge]:
-#     if group._group_checker is None:
-#         raise ValueError(
-#             "Unable to check if weights are in the group because no checker function was provided"
-#         )
-#     bad_edges = {edge for edge in edges if not group.check(edge.weight)}
-#     return bad_edges
-
-
 class WeightedDirectedGraph:
 
     def __init__(
         self,
         nodes: set[str],
         edges: set[WeightedDirectedEdge],
-        group: Group = real_multiplicative_group,
+        group: Group = _real_multiplicative_group,
     ) -> None:
         self._nodes = nodes
         self._edges = edges
@@ -129,6 +120,12 @@ class WeightedDirectedGraph:
             nodes=self._nodes - {node}, edges=good_edges, group=self.group
         )
         return return_graph
+
+    def children_with_weight(self, node: str) -> set[tuple[str, "Group.element"]]:
+        """Returns a set of tuples with the children of a node and their weights."""
+        if node not in self._nodes:
+            raise NodeNotFound(node)
+        return {(edge.end, edge._weight) for edge in self._edges if edge.start == node}
 
     # region Edge methods
     def add_edge(
@@ -245,6 +242,7 @@ class WeightedDirectedGraph:
         specific_max_visitations: dict[str, int] = {},
         max_iter: int | None = None,
         max_paths: int | None = None,
+        max_weight = None
     ) -> list[Path]:
         """Finds all the paths between two nodes in the graph.
 
@@ -263,7 +261,7 @@ class WeightedDirectedGraph:
             for the specify nodes. The default is {}.
         max_iter : int, optional
             A positive integer that controls the maximum number of iterations that the searching algorithm
-            can perform. If the algorithm reach this number, a warning will be raised. The default is 
+            can perform. If the algorithm reach this number, a warning will be raised. The default is
             the factorial of the number of nodes of the graph.
         max_paths : int, optional
             A positive integer that controls the maximum number of paths that the searching algorithm
@@ -295,7 +293,7 @@ class WeightedDirectedGraph:
                 Notice that the null cycle that runs through 'A' is return as `['A']`.
         """
 
-        if max_iter is None: 
+        if max_iter is None:
             max_iter = factorial(len(self))
         bad_nodes = {start, end} - self._nodes
         if bad_nodes:
@@ -350,11 +348,11 @@ class WeightedDirectedGraph:
         uknown_nodes = set(path_copy) - self.nodes
         if uknown_nodes:
             raise NodeNotFound(uknown_nodes)
-        
+
         path_pairs = list(zip(path_copy, path_copy[1:]))
         if not all(node_f in self.parents(node_c) for node_f, node_c in path_pairs):
             raise ValueError("The given path is not a valid path in the graph.")
-        
+
         path_edges_weights = [
             edge._weight for edge in self.edges if (edge.start, edge.end) in path_pairs
         ]
@@ -378,7 +376,7 @@ class WeightedDirectedGraph:
     def from_dict(
         cls,
         dict: dict[str, dict[str, "Group.element"]],
-        group: Group = real_multiplicative_group,
+        group: Group = _real_multiplicative_group,
     ) -> "WeightedDirectedGraph":
         """Creates a graph from a dictionary."""
         nodes = set(dict.keys())
@@ -408,13 +406,15 @@ class WeightedDirectedGraph:
     # region Auxiliary methods
     def _iter_aux(
         self,
-        explorer: PathExplorer,
+        explorer: PathExplorerPlus,
         target: str,
         general_max_visitations: int,
         specific_max_visitations: dict[str, int],
-    ) -> tuple[list[Path], list[PathExplorer]]:
+        max_weight
+    ) -> tuple[list[Path], list[PathExplorerPlus]]:
 
         current_node = explorer.path[-1]
+        weight = explorer.weight
         visitations = explorer.visitations.copy()
         visitations[current_node] = visitations.get(current_node, 0) + 1
         current_node_vistiations = visitations[current_node]
@@ -422,27 +422,31 @@ class WeightedDirectedGraph:
             current_node, general_max_visitations
         )
         found_path: list[Path] = []
-        new_explorers: list[PathExplorer] = []
+        new_explorers: list[PathExplorerPlus] = []
 
         if current_node_vistiations > current_node_max_vistiations:
             return found_path, new_explorers
+        
+        if max_weight is not None: 
+            if self.group.le(max_weight, weight):
+                return found_path, new_explorers
 
         if current_node == target:
             found_path = [explorer.path]
 
-        children = self.children(current_node)
+        children_tuples: set[tuple[str, "Group.element"]] = self.children_with_weight(current_node)
         forbidden_nodes = {
             node
             for node, rep in visitations.items()
             if rep >= specific_max_visitations.get(node, general_max_visitations)
         }
-        unexplored_nodes = children - forbidden_nodes
+        unexplored_nodes = {(child, child_weight) for child, child_weight in children_tuples if child not in forbidden_nodes}
         if not unexplored_nodes:
             return found_path, new_explorers
 
         new_explorers = [
-            PathExplorer(Path(explorer.path + [node]), visitations)
-            for node in unexplored_nodes
+            PathExplorerPlus(Path(explorer.path + [node]), self.group(weight, child_weight), visitations)
+            for node, child_weight in unexplored_nodes
         ]
         return found_path, new_explorers
 
@@ -454,12 +458,13 @@ class WeightedDirectedGraph:
         specific_max_visitations: dict[str, int] = {},
         max_iter: int = 1_000,
         max_paths: int | None = None,
+        max_weight = None,
     ) -> list[Path]:
         if max_paths is None:
             m_paths: int | float = inf
         else:
             m_paths = max_paths
-        explorers: list[PathExplorer] = [PathExplorer(Path([start]))]
+        explorers: list[PathExplorerPlus] = [PathExplorerPlus(Path([start]), self.group.identity)]
         all_paths: list[Path] = []
 
         it = 1
@@ -469,6 +474,7 @@ class WeightedDirectedGraph:
                 end,
                 general_max_visitations,
                 specific_max_visitations,
+                max_weight
             )
             all_paths.extend(discovered_path)
             new_explorers = list(set(discovered_explorers) - set(explorers))

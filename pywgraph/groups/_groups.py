@@ -19,6 +19,7 @@ class Group:
         inverse_function: Callable[[T], T],
         hash_function: Callable[[T], int] = hash,
         group_checker: Callable[[Any], bool] | None = None,
+        strict_total_order_function: Callable[[T, T], bool] | None = None,
     ) -> None:
         """Abstraction of a mathematical group.
 
@@ -54,6 +55,7 @@ class Group:
         self._inverse_function = inverse_function
         self._hash_function = hash_function
         self._group_checker = group_checker
+        self.strict_total_order_function = strict_total_order_function
 
     @property
     def name(self) -> str:
@@ -85,6 +87,11 @@ class Group:
         if self._group_checker is None:
             raise ValueError("Group checker not defined")
         return self._group_checker(element)
+    
+    def le(self, a: T, b: T) -> bool:
+        if self.strict_total_order_function is None:
+            raise ValueError("Total order not defined")
+        return self.strict_total_order_function(a, b)
 
     def __call__(self, a: T, b: T) -> T:
         return self.operation(a, b)

@@ -1,7 +1,8 @@
 from typing import TypeVar
-from ..groups import Group, real_multiplicative_group
+from ..groups import Group, CommonGroups
 
 T = TypeVar("T")
+_real_multiplicative_group = CommonGroups.RealMultiplicative
 
 
 class DirectedEdge:
@@ -47,7 +48,7 @@ class WeightedDirectedEdge(DirectedEdge):
         start: str,
         end: str,
         weight: T,
-        group: Group = real_multiplicative_group,
+        group: Group = _real_multiplicative_group,
     ) -> None:
         super().__init__(start, end)
 
