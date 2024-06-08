@@ -134,8 +134,9 @@ class Dijkstra:
         }
         if not _filter_table:
             return start
-        _min_weight = min(_filter_table.values(), key=group.cmp_key)
-        _next_node = [
-            key for key, value in _filter_table.items() if value == _min_weight
-        ][0]
+        # _min_weight = min(_filter_table.values(), key=group.cmp_key)
+        # _next_node = [
+        #     key for key, value in _filter_table.items() if value == _min_weight
+        # ][0]
+        _next_node = min(_filter_table, key= lambda x: group.cmp_key(_filter_table[x]))
         return _next_node
