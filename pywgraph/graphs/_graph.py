@@ -215,11 +215,20 @@ class WeightedDirectedGraph:
 
         return WeightedDirectedGraph(self._nodes, good_edges, self.group)
 
-    def add_reverse_edges(self, inplace: bool = False):
+    def add_reverse_edges(self, inplace: bool = False, method: str = "inverse"):
         """Adds the missing inverse direction edges. The weight assign to this new edges is
-        the inverse of the original edge weight."""
+        the inverse of the original edge weight by default. Setting the 'method' parameter to
+        'mirror' will use the same weight as the original edge."""
 
-        all_inverse_edges = {edge.inverse for edge in self._edges}
+        if method == "inverse":
+            all_inverse_edges = {edge.inverse for edge in self._edges}
+        elif method == "mirror":
+            all_inverse_edges = {edge.mirror for edge in self._edges}
+        else:
+            raise ValueError(
+                f"Unknown method '{method}'. Available methods are 'inverse' and 'mirror'."
+            )
+
         inverse_edges = {
             edge
             for edge in all_inverse_edges
@@ -242,7 +251,7 @@ class WeightedDirectedGraph:
         specific_max_visitations: dict[str, int] = {},
         max_iter: int | None = None,
         max_paths: int | None = None,
-        max_weight = None
+        max_weight=None,
     ) -> list[Path]:
         """Finds all the paths between two nodes in the graph.
 
@@ -410,7 +419,7 @@ class WeightedDirectedGraph:
         target: str,
         general_max_visitations: int,
         specific_max_visitations: dict[str, int],
-        max_weight
+        max_weight,
     ) -> tuple[list[Path], list[PathExplorerPlus]]:
 
         current_node = explorer.path[-1]
@@ -426,26 +435,36 @@ class WeightedDirectedGraph:
 
         if current_node_vistiations > current_node_max_vistiations:
             return found_path, new_explorers
-        
-        if max_weight is not None: 
+
+        if max_weight is not None:
             if self.group.le(max_weight, weight):
                 return found_path, new_explorers
 
         if current_node == target:
             found_path = [explorer.path]
 
-        children_tuples: set[tuple[str, "Group.element"]] = self.children_with_weight(current_node)
+        children_tuples: set[tuple[str, "Group.element"]] = self.children_with_weight(
+            current_node
+        )
         forbidden_nodes = {
             node
             for node, rep in visitations.items()
             if rep >= specific_max_visitations.get(node, general_max_visitations)
         }
-        unexplored_nodes = {(child, child_weight) for child, child_weight in children_tuples if child not in forbidden_nodes}
+        unexplored_nodes = {
+            (child, child_weight)
+            for child, child_weight in children_tuples
+            if child not in forbidden_nodes
+        }
         if not unexplored_nodes:
             return found_path, new_explorers
 
         new_explorers = [
-            PathExplorerPlus(Path(explorer.path + [node]), self.group(weight, child_weight), visitations)
+            PathExplorerPlus(
+                Path(explorer.path + [node]),
+                self.group(weight, child_weight),
+                visitations,
+            )
             for node, child_weight in unexplored_nodes
         ]
         return found_path, new_explorers
@@ -458,13 +477,15 @@ class WeightedDirectedGraph:
         specific_max_visitations: dict[str, int] = {},
         max_iter: int = 1_000,
         max_paths: int | None = None,
-        max_weight = None,
+        max_weight=None,
     ) -> list[Path]:
         if max_paths is None:
             m_paths: int | float = inf
         else:
             m_paths = max_paths
-        explorers: list[PathExplorerPlus] = [PathExplorerPlus(Path([start]), self.group.identity)]
+        explorers: list[PathExplorerPlus] = [
+            PathExplorerPlus(Path([start]), self.group.identity)
+        ]
         all_paths: list[Path] = []
 
         it = 1
@@ -474,7 +495,7 @@ class WeightedDirectedGraph:
                 end,
                 general_max_visitations,
                 specific_max_visitations,
-                max_weight
+                max_weight,
             )
             all_paths.extend(discovered_path)
             new_explorers = list(set(discovered_explorers) - set(explorers))

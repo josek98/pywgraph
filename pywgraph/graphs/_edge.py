@@ -67,6 +67,10 @@ class WeightedDirectedEdge(DirectedEdge):
     def inverse(self) -> "WeightedDirectedEdge":
         inverse_weight = self.group.inverse(self._weight)
         return WeightedDirectedEdge(self._end, self._start, inverse_weight, self.group)
+    
+    @property
+    def mirror(self) -> "WeightedDirectedEdge":
+        return WeightedDirectedEdge(self._end, self._start, self._weight, self.group)
 
     def __iter__(self):
         yield self._start

@@ -1,4 +1,5 @@
 from typing import Callable, TypeVar, Any
+from functools import cmp_to_key
 
 
 """Since I don't find an easy way of providing a way to indicate the elements of the 
@@ -77,6 +78,18 @@ class Group:
     def hash_function(self) -> Callable[[T], int]:
         return self._hash_function
 
+    @property
+    def cmp_key(self) -> Callable[[T], Any]:
+        def _cmp(a: T, b: T) -> int:
+            if self.le(a, b):
+                return -1
+            elif self.le(b, a):
+                return 1
+            else:
+                return 0
+
+        return cmp_to_key(_cmp)
+
     def inverse(self, element: T) -> T:
         return self.inverse_function(element)
 
@@ -87,7 +100,7 @@ class Group:
         if self._group_checker is None:
             raise ValueError("Group checker not defined")
         return self._group_checker(element)
-    
+
     def le(self, a: T, b: T) -> bool:
         if self.strict_total_order_function is None:
             raise ValueError("Total order not defined")
