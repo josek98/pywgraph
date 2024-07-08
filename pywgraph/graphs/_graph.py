@@ -422,6 +422,50 @@ class WeightedDirectedGraph:
             for end, weight in end_dict.items()
         }
         return cls(nodes, edges, group)
+    
+    @classmethod
+    def from_tuples(
+        cls, 
+        tuples: list[tuple[str, str, "Group.element"]],
+        group: Group = _real_multiplicative_group,
+    ) -> "WeightedDirectedGraph":
+        """Creates a graph from a list of tuples. Each tuple must be a tuple of three elements, 
+        the first element being the initial node, the second element being the destination node
+        and the third element being the weight of the edge connecting the initial node to the destination node.
+        If the weights of the graph are not real numbers or the user wants another behaviour different from 
+        multiplicative when traversing the graph, the user can pass a group to the method.
+        
+        Parameters
+        ----------
+        tuples : list[tuple[str, str, Group.element]]
+            The list of tuples to create the graph from.
+        group : Group, optional
+            The group where the weights of the graph belongs to. The default is the real multiplicative group.
+        
+        Example
+        -------
+        graph = WeightedDirectedGraph.from_tuples(
+            [
+                ('A', 'B', 2),
+                ('A', 'D', 8),
+                ('B', 'D', 5),
+                ('B', 'E', 6),
+                ('D', 'E', 3),
+                ('D', 'F', 2),
+                ('E', 'F', 1),
+                ('E', 'C', 9),
+                ('F', 'C', 3)
+            ],
+            CommonGroups.RealAdditive
+        )
+        
+        """
+        nodes = set(tuple[0] for tuple in tuples) | set(tuple[1] for tuple in tuples)
+        edges = {
+            WeightedDirectedEdge(start, end, weight, group)
+            for start, end, weight in tuples
+        }
+        return cls(nodes, edges, group)
 
     # region Dunder methods
     def __repr__(self) -> str:
