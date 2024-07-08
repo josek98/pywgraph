@@ -4,7 +4,7 @@ A library to manipulate weighted graphs in python. This library focus on directe
 
 For this reason, this package also includes a basic abstraction of a group. The group definition is base on:
 
-* The a function of two variables that return one element (the binary operation of the group).
+* A function of two variables that return one element (the binary operation of the group).
 
 * The inverse function of an element. This is, the function that given an element of the group returns its inverse.
 
