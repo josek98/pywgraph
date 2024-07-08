@@ -387,7 +387,34 @@ class WeightedDirectedGraph:
         dict: dict[str, dict[str, "Group.element"]],
         group: Group = _real_multiplicative_group,
     ) -> "WeightedDirectedGraph":
-        """Creates a graph from a dictionary."""
+        """Creates a graph from a dictionary. Dictionary keys must be initial nodes and values must be 
+        another dictionary whose keys are the destination nodes and values are the weights of the edge
+        connecting the initial node to the destination node. If the weights of the graph are not
+        real numbers or the user wants another behaviour different from multiplicative when traversing
+        the graph, the user can pass a group to the method.
+
+        Parameters
+        ----------
+        dict : dict[str, dict[str, Group.element]]
+            The dictionary to create the graph from.
+        group : Group, optional
+            The group where the weights of the graph belongs to. The default is the real multiplicative group.
+        
+        Example
+        -------
+        graph = WeightedDirectedGraph.from_dict(
+            {
+                'A': {'B':2, 'D':8},
+                'B': {'D':5, 'E':6},
+                'D': {'E':3, 'F':2},
+                'E': {'F':1, 'C':9},
+                'F': {'C':3},
+                'C': {}
+            },
+            CommonGroups.RealAdditive
+        )
+        
+        """
         nodes = set(dict.keys())
         edges = {
             WeightedDirectedEdge(start, end, weight, group)
