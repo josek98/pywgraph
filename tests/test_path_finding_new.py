@@ -11,6 +11,18 @@ def graph() -> WeightedDirectedGraph:
     }
     return WeightedDirectedGraph.from_dict(_dict).add_reverse_edges()
 
+def graph_from_tuples() -> WeightedDirectedGraph:
+    _tuples = [
+        ("A", "B", 1),
+        ("B", "C", 1),
+    ]
+    _graph = WeightedDirectedGraph.from_tuples(_tuples)
+    _graph.add_node("Z", inplace=True)
+    return _graph.add_reverse_edges()
+
+def test_from_tuples():
+    assert graph_from_tuples() == graph()
+
 
 class TestMultiPathFinding:
     def test_is_conmutative(self):
