@@ -1,7 +1,8 @@
 from typing import TypeVar
-from ..groups import Group, real_multiplicative_group
+from ..groups import Group, CommonGroups
 
 T = TypeVar("T")
+_real_multiplicative_group = CommonGroups.RealMultiplicative
 
 
 class DirectedEdge:
@@ -47,7 +48,7 @@ class WeightedDirectedEdge(DirectedEdge):
         start: str,
         end: str,
         weight: T,
-        group: Group = real_multiplicative_group,
+        group: Group = _real_multiplicative_group,
     ) -> None:
         super().__init__(start, end)
 
@@ -66,6 +67,10 @@ class WeightedDirectedEdge(DirectedEdge):
     def inverse(self) -> "WeightedDirectedEdge":
         inverse_weight = self.group.inverse(self._weight)
         return WeightedDirectedEdge(self._end, self._start, inverse_weight, self.group)
+    
+    @property
+    def mirror(self) -> "WeightedDirectedEdge":
+        return WeightedDirectedEdge(self._end, self._start, self._weight, self.group)
 
     def __iter__(self):
         yield self._start

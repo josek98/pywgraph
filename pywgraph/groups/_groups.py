@@ -1,4 +1,5 @@
 from typing import Callable, TypeVar, Any
+from functools import cmp_to_key
 
 
 """Since I don't find an easy way of providing a way to indicate the elements of the 
@@ -19,6 +20,7 @@ class Group:
         inverse_function: Callable[[T], T],
         hash_function: Callable[[T], int] = hash,
         group_checker: Callable[[Any], bool] | None = None,
+        strict_total_order_function: Callable[[T, T], bool] | None = None,
     ) -> None:
         """Abstraction of a mathematical group.
 
@@ -54,6 +56,7 @@ class Group:
         self._inverse_function = inverse_function
         self._hash_function = hash_function
         self._group_checker = group_checker
+        self.strict_total_order_function = strict_total_order_function
 
     @property
     def name(self) -> str:
@@ -75,6 +78,18 @@ class Group:
     def hash_function(self) -> Callable[[T], int]:
         return self._hash_function
 
+    @property
+    def cmp_key(self) -> Callable[[T], Any]:
+        def _cmp(a: T, b: T) -> int:
+            if self.le(a, b):
+                return -1
+            elif self.le(b, a):
+                return 1
+            else:
+                return 0
+
+        return cmp_to_key(_cmp)
+
     def inverse(self, element: T) -> T:
         return self.inverse_function(element)
 
@@ -85,6 +100,11 @@ class Group:
         if self._group_checker is None:
             raise ValueError("Group checker not defined")
         return self._group_checker(element)
+
+    def le(self, a: T, b: T) -> bool:
+        if self.strict_total_order_function is None:
+            raise ValueError("Total order not defined")
+        return self.strict_total_order_function(a, b)
 
     def __call__(self, a: T, b: T) -> T:
         return self.operation(a, b)

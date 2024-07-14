@@ -25,6 +25,12 @@ _dict_graph: dict[str, dict[str, float]] = {
     "C": {},
 }
 
+_tuples_graph_list: list[tuple[str, str, float]] = [
+    ("A", "B", 7),
+    ("A", "C", 9),
+    ("B", "C", 10),
+]
+
 
 class TestWeightedDirectedGraph:
 
@@ -77,6 +83,9 @@ class TestWeightedDirectedGraph:
         }
         same_graph = WeightedDirectedGraph(nodes, edges)
         assert graph() == same_graph
+
+    def test_from_tuples(self):
+        assert WeightedDirectedGraph.from_tuples(_tuples_graph_list) == graph()
 
     def test_fill_reverse_edges_inplace(self):
         filled_graph = WeightedDirectedGraph(
