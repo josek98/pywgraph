@@ -295,3 +295,7 @@ Notice that this graph is not conmutative since the weight of the path `["A", "C
 * Add the property `WeightedDirectedGraph.is_conmutative` that checks it the graph is conmutative.
 * The method `WeightedDirectedGraph.weight_between` is deprecated and will be removed. Combine `WeightedDirectedGraph.find_paths` with `WeightedDirectedGraph.path_weight` to replicate `WeightedDirectedGraph.weight_between` behaviour.
 * The behaviour of `WeightedDirectedGraph.add_edge` when no weight and path is given is deprecated and will be removed. Either give a weight or seach for a path.
+
+### Version 1.1.1-beta (2024-05-15)
+* New method `WeightedDirectedGraph.from_tuples` to initialize a graph from a list of tuples. This must be a list of 3-tuples whose first two elements are nodes and the third is the weight.
+* The Dijkstra algorithm is now implemented. A `Dijkstra` class is added to the package. It is initialized with a graph and a starting node. You can use `Dijkstra.perform_dijkstra_algorithm` to perform the algorithm and then call `Dijkstra.shortest_path` to get the shortest path between two nodes. The result is a `DijkstraResult` object that consists of a path and the weight of the path.
